@@ -21,6 +21,7 @@
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <app/EventLogging.h>
 #include <app/clusters/ambient-context-sensing-server/CodegenIntegration.h>
+#include <app/clusters/basic-information/CodegenIntegration.h>
 #include <app/clusters/boolean-state-configuration-server/CodegenIntegration.h>
 #include <app/clusters/boolean-state-server/CodegenIntegration.h>
 #include <app/clusters/general-diagnostics-server/CodegenIntegration.h>
@@ -893,13 +894,14 @@ void AllClustersAppCommandHandler::HandleCommand(intptr_t context)
     }
     else if (name == "SimulateConfigurationVersionChange")
     {
-        uint32_t configurationVersion = 0;
-        TEMPORARY_RETURN_IGNORED ConfigurationMgr().GetConfigurationVersion(configurationVersion);
-        configurationVersion++;
-
-        if (ConfigurationMgr().StoreConfigurationVersion(configurationVersion + 1) != CHIP_NO_ERROR)
+        Clusters::BasicInformationCluster * cluster = Clusters::BasicInformation::GetClusterInstance();
+        if (cluster == nullptr)
         {
-            ChipLogError(NotSpecified, "Failed to store configuration version:%d", configurationVersion);
+            ChipLogError(NotSpecified, "No basic information cluster available. Invalid state.");
+        }
+        else
+        {
+            LogErrorOnFailure(cluster->IncreaseConfigurationVersion());
         }
     }
     else if (name == "SetSimulatedSoilMoisture")
