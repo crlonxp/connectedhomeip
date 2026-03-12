@@ -258,8 +258,8 @@ TEST_F(TestAmbientContextSensingCluster, TestAmbientContextTypeSupported)
         kACTSupported_all[3],
     };
 
-    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
-                                              .WithFeatures(AmbientContextSensing::Feature(kFeatures)) };
+    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithFeatures(
+        AmbientContextSensing::Feature(kFeatures)) };
 
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
 
@@ -362,8 +362,10 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimePersistence)
 
     // 1. Create a cluster. On startup, it should store the default hold time.
     {
-        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(
-            kDefaultHoldTime, holdTimeLimitsConfig) };
+        AmbientContextSensingCluster cluster{
+            AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(kDefaultHoldTime,
+                                                                                                     holdTimeLimitsConfig)
+        };
 
         EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
         chip::Testing::ClusterTester tester(cluster);
@@ -377,8 +379,10 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimePersistence)
 
     // 2. Write a new value to the attribute. This should update the value in persistence.
     {
-        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(
-            kDefaultHoldTime, holdTimeLimitsConfig) };
+        AmbientContextSensingCluster cluster{
+            AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(kDefaultHoldTime,
+                                                                                                     holdTimeLimitsConfig)
+        };
 
         EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR); // Startup will load the default value again
         chip::Testing::ClusterTester tester(cluster);
@@ -389,8 +393,10 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimePersistence)
 
     // 3. Create a new cluster instance. It should load the new value from persistence on startup.
     {
-        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(
-            kDefaultHoldTime, holdTimeLimitsConfig) };
+        AmbientContextSensingCluster cluster{
+            AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(kDefaultHoldTime,
+                                                                                                     holdTimeLimitsConfig)
+        };
 
         EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
         chip::Testing::ClusterTester tester(cluster);

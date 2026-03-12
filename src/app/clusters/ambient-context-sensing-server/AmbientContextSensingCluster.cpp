@@ -343,9 +343,9 @@ CHIP_ERROR AmbientContextSensingCluster::SetHoldTime(uint16_t holdTime)
     // Save the value to persistence
     if (mContext != nullptr)
     {
-        LogErrorOnFailure(mContext->attributeStorage.WriteValue(
-            { mPath.mEndpointId, AmbientContextSensing::Id, Attributes::HoldTime::Id },
-            { reinterpret_cast<const uint8_t *>(&mHoldTime), sizeof(mHoldTime) }));
+        LogErrorOnFailure(
+            mContext->attributeStorage.WriteValue({ mPath.mEndpointId, AmbientContextSensing::Id, Attributes::HoldTime::Id },
+                                                  { reinterpret_cast<const uint8_t *>(&mHoldTime), sizeof(mHoldTime) }));
     }
 
     return CHIP_NO_ERROR;

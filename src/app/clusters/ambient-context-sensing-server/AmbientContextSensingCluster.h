@@ -62,8 +62,8 @@ public:
         Config & WithHoldTime(uint16_t aHoldTime,
                               const AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type & aHoldTimeLimits)
         {
-            mHoldTime         = aHoldTime;
-            mHoldTimeLimits   = aHoldTimeLimits;
+            mHoldTime       = aHoldTime;
+            mHoldTimeLimits = aHoldTimeLimits;
             return *this;
         }
 
