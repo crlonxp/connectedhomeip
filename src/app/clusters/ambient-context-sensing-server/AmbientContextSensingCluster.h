@@ -38,6 +38,7 @@ constexpr uint8_t kMaxACSensed                   = 2;
 constexpr uint8_t kMaxACTypeSupported            = 50;
 constexpr uint8_t kMaxSimultaneousDetectionLimit = 10;
 constexpr uint16_t kMinObjectCount               = 1;
+constexpr uint8_t kMaxPredictedACType            = 100;
 constexpr uint8_t kMaxPredictedActivity          = 20;
 
 using SemanticTagType           = Globals::Structs::SemanticTagStruct::Type;
@@ -50,7 +51,7 @@ class AmbientContextSensingCluster : public DefaultServerCluster, public TimerCo
 public:
     struct Config
     {
-        Config(EndpointId endpointId) : mEndpointId(endpointId) {}
+        Config(EndpointId endpointId, TimerDelegate & timerDelegate) : mEndpointId(endpointId), mHoldTimeDelegate(timerDelegate) {}
 
         Config & WithFeatures(AmbientContextSensing::Feature featureMap)
         {
@@ -59,18 +60,10 @@ public:
         }
 
         Config & WithHoldTime(uint16_t aHoldTime,
-                              const AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type & aHoldTimeLimits,
-                              TimerDelegate & aTimerDelegate)
+                              const AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type & aHoldTimeLimits)
         {
             mHoldTime         = aHoldTime;
             mHoldTimeLimits   = aHoldTimeLimits;
-            mHoldTimeDelegate = &aTimerDelegate;
-            return *this;
-        }
-
-        Config & WithAmbientContextSupported(chip::Span<const SemanticTagType> acsTypes)
-        {
-            mAmbientContextTypeSupportedList.assign(acsTypes.begin(), acsTypes.end());
             return *this;
         }
 
@@ -87,8 +80,7 @@ public:
         AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = kDefaultHoldTimeMin,
                                                                                        .holdTimeMax     = kDefaultHoldTimeMax,
                                                                                        .holdTimeDefault = kDefaultHoldTimeDefault };
-        TimerDelegate * mHoldTimeDelegate                                          = nullptr;
-        std::vector<SemanticTagType> mAmbientContextTypeSupportedList;
+        TimerDelegate & mHoldTimeDelegate;
     };
 
     struct AmbientContextSensed
@@ -123,7 +115,7 @@ public:
     DataModel::ActionReturnStatus SetObjectCountConfig(const ObjectCountConfigType & objectCountConfig);
     CHIP_ERROR SetObjectCount(uint16_t objectCount);
     DataModel::ActionReturnStatus SetSimultaneousDetectionLimit(const uint8_t simultaneousDetectionLimit);
-    DataModel::ActionReturnStatus SetHoldTime(uint16_t holdTime);
+    CHIP_ERROR SetHoldTime(uint16_t holdTime);
     uint16_t GetHoldTime() const { return mHoldTime; }
     void SetHoldTimeLimits(const AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type & holdTimeLimits);
     CHIP_ERROR SetPredictedActivity(const std::vector<PredictedActivityType> & predictedActivity);
@@ -142,7 +134,7 @@ private:
     CHIP_ERROR CheckPredictedActivity(const std::vector<PredictedActivityType> & predictedActivityList);
     CHIP_ERROR ReadPredictedActivity(AttributeValueEncoder & encoder);
 
-    BitMask<AmbientContextSensing::Feature> mFeatureMap;
+    const BitMask<AmbientContextSensing::Feature> mFeatureMap;
     bool mHumanActivityDetected = false;
     bool mObjectIdentified      = false;
     bool mAudioContextDetected  = false;
@@ -167,7 +159,7 @@ private:
     AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = kDefaultHoldTimeMin,
                                                                                    .holdTimeMax     = kDefaultHoldTimeMax,
                                                                                    .holdTimeDefault = kDefaultHoldTimeDefault };
-    TimerDelegate * mHoldTimeDelegate;
+    TimerDelegate & mHoldTimeDelegate;
 
     std::vector<PredictActivity> mPredictedActivityList;
 };

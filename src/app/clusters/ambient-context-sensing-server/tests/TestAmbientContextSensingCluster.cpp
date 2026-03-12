@@ -119,7 +119,7 @@ struct TestAmbientContextSensingCluster : public ::testing::Test
 TEST_F(TestAmbientContextSensingCluster, TestAttributes)
 {
     chip::Testing::TestServerClusterContext context;
-    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }.WithFeatures(
+    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithFeatures(
         AmbientContextSensing::Feature(g_kFeatures_all)) };
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
     chip::Testing::ClusterTester tester(cluster);
@@ -258,11 +258,13 @@ TEST_F(TestAmbientContextSensingCluster, TestAmbientContextTypeSupported)
         kACTSupported_all[3],
     };
 
-    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }
-                                              .WithFeatures(AmbientContextSensing::Feature(kFeatures))
-                                              .WithAmbientContextSupported(chip::Span<const SemanticTagType>(kACTSupported_dup)) };
+    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
+                                              .WithFeatures(AmbientContextSensing::Feature(kFeatures)) };
 
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
+
+    std::vector<SemanticTagType> ACTypeList_support(std::begin(kACTSupported_dup), std::end(kACTSupported_dup));
+    EXPECT_EQ(cluster.SetAmbientContextTypeSupported(ACTypeList_support), CHIP_ERROR_INVALID_ARGUMENT);
     chip::Testing::ClusterTester tester(cluster);
 
     // Read the AmbientContextTypeSupported.
@@ -307,8 +309,8 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimeAttribute)
     AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type holdTimeLimitsConfig = { .holdTimeMin     = 10,
                                                                                         .holdTimeMax     = 200,
                                                                                         .holdTimeDefault = 100 };
-    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }.WithHoldTime(
-        100, holdTimeLimitsConfig, mMockTimerDelegate) };
+    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(
+        100, holdTimeLimitsConfig) };
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
     chip::Testing::ClusterTester tester(cluster);
 
@@ -319,14 +321,14 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimeAttribute)
     EXPECT_EQ(holdTime, 150);
     EXPECT_EQ(cluster.GetHoldTime(), 150);
 
-    // Verify that setting the same value returns NoOp
-    EXPECT_EQ(cluster.SetHoldTime(150), DataModel::ActionReturnStatus::FixedStatus::kWriteSuccessNoOp);
+    // Verify that setting the same value returns CHIP_NO_ERROR
+    EXPECT_EQ(cluster.SetHoldTime(150), CHIP_NO_ERROR);
 
     // Verify that we cannot set a hold time less than the minimum
-    EXPECT_EQ(cluster.SetHoldTime(5), Protocols::InteractionModel::Status::ConstraintError);
+    EXPECT_EQ(cluster.SetHoldTime(5), CHIP_ERROR_INVALID_ARGUMENT);
 
     // Verify that we cannot set a hold time greater than the maximum
-    EXPECT_EQ(cluster.SetHoldTime(250), Protocols::InteractionModel::Status::ConstraintError);
+    EXPECT_EQ(cluster.SetHoldTime(250), CHIP_ERROR_INVALID_ARGUMENT);
 
     // Verify that we can write a valid hold time via WriteAttribute
     EXPECT_EQ(tester.WriteAttribute(Attributes::HoldTime::Id, static_cast<uint16_t>(180)), CHIP_NO_ERROR);
@@ -335,10 +337,10 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimeAttribute)
     EXPECT_EQ(cluster.GetHoldTime(), 180);
 
     // Verify that we cannot write a hold time less than the minimum via WriteAttribute
-    EXPECT_EQ(tester.WriteAttribute(Attributes::HoldTime::Id, static_cast<uint16_t>(5)), CHIP_IM_GLOBAL_STATUS(ConstraintError));
+    EXPECT_EQ(tester.WriteAttribute(Attributes::HoldTime::Id, static_cast<uint16_t>(5)), CHIP_ERROR_INVALID_ARGUMENT);
 
     // Verify that we cannot write a hold time greater than the maximum via WriteAttribute
-    EXPECT_EQ(tester.WriteAttribute(Attributes::HoldTime::Id, static_cast<uint16_t>(250)), CHIP_IM_GLOBAL_STATUS(ConstraintError));
+    EXPECT_EQ(tester.WriteAttribute(Attributes::HoldTime::Id, static_cast<uint16_t>(250)), CHIP_ERROR_INVALID_ARGUMENT);
 
     // Give the new HoldTimeLimitation whose range is different. The HoldTime should be reset
     holdTimeLimitsConfig.holdTimeMin     = 201;
@@ -360,8 +362,8 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimePersistence)
 
     // 1. Create a cluster. On startup, it should store the default hold time.
     {
-        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }.WithHoldTime(
-            kDefaultHoldTime, holdTimeLimitsConfig, mMockTimerDelegate) };
+        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(
+            kDefaultHoldTime, holdTimeLimitsConfig) };
 
         EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
         chip::Testing::ClusterTester tester(cluster);
@@ -375,8 +377,8 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimePersistence)
 
     // 2. Write a new value to the attribute. This should update the value in persistence.
     {
-        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }.WithHoldTime(
-            kDefaultHoldTime, holdTimeLimitsConfig, mMockTimerDelegate) };
+        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(
+            kDefaultHoldTime, holdTimeLimitsConfig) };
 
         EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR); // Startup will load the default value again
         chip::Testing::ClusterTester tester(cluster);
@@ -387,8 +389,8 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimePersistence)
 
     // 3. Create a new cluster instance. It should load the new value from persistence on startup.
     {
-        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }.WithHoldTime(
-            kDefaultHoldTime, holdTimeLimitsConfig, mMockTimerDelegate) };
+        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(
+            kDefaultHoldTime, holdTimeLimitsConfig) };
 
         EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
         chip::Testing::ClusterTester tester(cluster);
@@ -408,12 +410,13 @@ TEST_F(TestAmbientContextSensingCluster, TestAmbientContextDetect)
                                                                                         .holdTimeMax     = 200,
                                                                                         .holdTimeDefault = 100 };
 
-    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }
+    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
                                               .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all))
-                                              .WithAmbientContextSupported(chip::Span<const SemanticTagType>(g_kACTSupportedArray))
-                                              .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig, mMockTimerDelegate) };
+                                              .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig) };
 
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
+    std::vector<SemanticTagType> ACTypeList_support(std::begin(g_kACTSupportedArray), std::end(g_kACTSupportedArray));
+    EXPECT_EQ(cluster.SetAmbientContextTypeSupported(ACTypeList_support), CHIP_NO_ERROR);
     chip::Testing::ClusterTester tester(cluster);
 
     // Read the AmbientContextTypeSupported.
@@ -494,12 +497,13 @@ TEST_F(TestAmbientContextSensingCluster, TestSimultaneousDetectLimit)
                                                                                         .holdTimeMax     = 200,
                                                                                         .holdTimeDefault = 100 };
 
-    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }
+    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
                                               .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all))
-                                              .WithAmbientContextSupported(chip::Span<const SemanticTagType>(g_kACTSupportedArray))
-                                              .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig, mMockTimerDelegate) };
+                                              .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig) };
 
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
+    std::vector<SemanticTagType> ACTypeList_support(std::begin(g_kACTSupportedArray), std::end(g_kACTSupportedArray));
+    EXPECT_EQ(cluster.SetAmbientContextTypeSupported(ACTypeList_support), CHIP_NO_ERROR);
     chip::Testing::ClusterTester tester(cluster);
 
     // Read SimultaneousDetectionLimit attribute: Exp: kDefaultSimultaneousDetectionLimit;
@@ -553,9 +557,9 @@ TEST_F(TestAmbientContextSensingCluster, TestObjectCount)
     AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type holdTimeLimitsConfig = {
         .holdTimeMin = 10, .holdTimeMax = 200, .holdTimeDefault = kDefaultHoldTimeDefault
     };
-    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }
+    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
                                               .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all))
-                                              .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig, mMockTimerDelegate) };
+                                              .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig) };
 
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
     chip::Testing::ClusterTester tester(cluster);
@@ -640,10 +644,9 @@ TEST_F(TestAmbientContextSensingCluster, TestObjCntThresholdPersistence)
         AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type holdTimeLimitsConfig = {
             .holdTimeMin = 10, .holdTimeMax = 200, .holdTimeDefault = kDefaultHoldTimeDefault
         };
-        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }
+        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
                                                   .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all))
-                                                  .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig,
-                                                                mMockTimerDelegate) };
+                                                  .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig) };
 
         EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
         chip::Testing::ClusterTester tester(cluster);
@@ -683,10 +686,9 @@ TEST_F(TestAmbientContextSensingCluster, TestObjCntThresholdPersistence)
         AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type holdTimeLimitsConfig = {
             .holdTimeMin = 10, .holdTimeMax = 200, .holdTimeDefault = kDefaultHoldTimeDefault
         };
-        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }
+        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
                                                   .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all))
-                                                  .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig,
-                                                                mMockTimerDelegate) };
+                                                  .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig) };
 
         EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
         chip::Testing::ClusterTester tester(cluster);
@@ -706,7 +708,7 @@ TEST_F(TestAmbientContextSensingCluster, TestObjCntThresholdPersistence)
 TEST_F(TestAmbientContextSensingCluster, TestPredictActivity)
 {
     chip::Testing::TestServerClusterContext context;
-    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId }.WithFeatures(
+    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithFeatures(
         AmbientContextSensing::Feature(g_kFeatures_all)) };
 
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
@@ -730,7 +732,7 @@ TEST_F(TestAmbientContextSensingCluster, TestPredictActivity)
     EXPECT_EQ(cluster.SetPredictedActivity(predictActivity), CHIP_NO_ERROR);
 
     // Readback PredictedActivity
-    DecodableList<PredictedActivityDecordable> out;
+    DecodableList<PredictedActivityDecodable> out;
     EXPECT_EQ(tester.ReadAttribute(Attributes::PredictedActivity::Id, out), CHIP_NO_ERROR);
     size_t size = 0;
     EXPECT_EQ(out.ComputeSize(&size), CHIP_NO_ERROR);

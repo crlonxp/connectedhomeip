@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <app-common/zap-generated/cluster-objects.h>
+#include <lib/core/DataModelTypes.h>
 
 // Please refer to https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
 

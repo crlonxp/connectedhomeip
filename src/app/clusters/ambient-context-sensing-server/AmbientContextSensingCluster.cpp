@@ -18,7 +18,6 @@
 #include <app/clusters/ambient-context-sensing-server/ambient-context-sensing-namespace.h>
 #include <app/persistence/AttributePersistence.h>
 #include <app/server-cluster/AttributeListBuilder.h>
-#include <app/server/Server.h>
 #include <chrono>
 #include <clusters/AmbientContextSensing/Metadata.h>
 
@@ -31,7 +30,6 @@ AmbientContextSensingCluster::AmbientContextSensingCluster(const Config & config
     DefaultServerCluster({ config.mEndpointId, AmbientContextSensing::Id }), mFeatureMap(config.mFeatureMap),
     mHoldTimeDelegate(config.mHoldTimeDelegate)
 {
-    TEMPORARY_RETURN_IGNORED SetAmbientContextTypeSupported(config.mAmbientContextTypeSupportedList);
     SetHoldTimeLimits(config.mHoldTimeLimits);
     mHoldTime = std::clamp(config.mHoldTime, mHoldTimeLimits.holdTimeMin, mHoldTimeLimits.holdTimeMax);
 }
@@ -56,7 +54,7 @@ CHIP_ERROR AmbientContextSensingCluster::Startup(ServerClusterContext & context)
                                           storedHoldTime, mHoldTime))
     {
         // A value was found in persistence.
-        RETURN_SAFELY_IGNORED SetHoldTime(storedHoldTime);
+        LogErrorOnFailure(SetHoldTime(storedHoldTime));
     }
 
     return CHIP_NO_ERROR;
@@ -64,10 +62,7 @@ CHIP_ERROR AmbientContextSensingCluster::Startup(ServerClusterContext & context)
 
 void AmbientContextSensingCluster::Shutdown(ClusterShutdownType shutdownType)
 {
-    if (mHoldTimeDelegate)
-    {
-        mHoldTimeDelegate->CancelTimer(this);
-    }
+    mHoldTimeDelegate.CancelTimer(this);
     DefaultServerCluster::Shutdown(shutdownType);
 }
 
@@ -127,7 +122,9 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::WriteAttribute(const
     case HoldTime::Id: {
         uint16_t newHoldTime;
         ReturnErrorOnFailure(decoder.Decode(newHoldTime));
-        return SetHoldTime(newHoldTime);
+        VerifyOrReturnError((newHoldTime != mHoldTime), DataModel::ActionReturnStatus::FixedStatus::kWriteSuccessNoOp);
+        ReturnErrorOnFailure(SetHoldTime(newHoldTime));
+        return Protocols::InteractionModel::Status::Success;
     }
     default:
         return Protocols::InteractionModel::Status::UnsupportedWrite;
@@ -154,9 +151,6 @@ CHIP_ERROR AmbientContextSensingCluster::Attributes(const ConcreteClusterPath & 
           Attributes::ObjectCountConfig::kMetadataEntry },
         { mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification) && mObjectCountReached,
           Attributes::ObjectCount::kMetadataEntry },
-        { false, Attributes::SimultaneousDetectionLimit::kMetadataEntry },
-        { false, Attributes::HoldTime::kMetadataEntry },
-        { false, Attributes::HoldTimeLimits::kMetadataEntry },
         { mFeatureMap.Has(Feature::kPredictedActivity), Attributes::PredictedActivity::kMetadataEntry },
     };
 
@@ -207,7 +201,7 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
             break;
         }
     }
-    System::Clock::Timestamp now = mHoldTimeDelegate->GetCurrentMonotonicTimestamp();
+    System::Clock::Timestamp now = mHoldTimeDelegate.GetCurrentMonotonicTimestamp();
     System::Clock::Seconds16 newHoldTime;
     if (!fromExisting)
     {
@@ -281,17 +275,12 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::SetObjectCountConfig
         // Save the value to persistence
         if (mContext != nullptr)
         {
-            RETURN_SAFELY_IGNORED mContext->attributeStorage.WriteValue(
+            LogErrorOnFailure(mContext->attributeStorage.WriteValue(
                 { mPath.mEndpointId, AmbientContextSensing::Id, Attributes::ObjectCountConfig::Id },
                 { reinterpret_cast<const uint8_t *>(&mObjectCountConfig.objectCountThreshold),
-                  sizeof(mObjectCountConfig.objectCountThreshold) });
+                  sizeof(mObjectCountConfig.objectCountThreshold) }));
         }
     }
-    else
-    {
-        return DataModel::ActionReturnStatus::FixedStatus::kWriteSuccessNoOp;
-    }
-
     return Protocols::InteractionModel::Status::Success;
 }
 
@@ -306,7 +295,7 @@ CHIP_ERROR AmbientContextSensingCluster::SetObjectCount(uint16_t objectCount)
 
     mObjectCount = objectCount;
     NotifyAttributeChanged(Attributes::ObjectCount::Id);
-    mObjectCountEndTime = mHoldTimeDelegate->GetCurrentMonotonicTimestamp() + System::Clock::Seconds16(mHoldTime);
+    mObjectCountEndTime = mHoldTimeDelegate.GetCurrentMonotonicTimestamp() + System::Clock::Seconds16(mHoldTime);
     UpdateDetectionAttributes();
     UpdateEventTimeout();
 
@@ -342,11 +331,11 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::SetSimultaneousDetec
     return Protocols::InteractionModel::Status::Success;
 }
 
-DataModel::ActionReturnStatus AmbientContextSensingCluster::SetHoldTime(uint16_t holdTime)
+CHIP_ERROR AmbientContextSensingCluster::SetHoldTime(uint16_t holdTime)
 {
-    VerifyOrReturnError(holdTime >= mHoldTimeLimits.holdTimeMin, Protocols::InteractionModel::Status::ConstraintError);
-    VerifyOrReturnError(holdTime <= mHoldTimeLimits.holdTimeMax, Protocols::InteractionModel::Status::ConstraintError);
-    VerifyOrReturnError(holdTime != mHoldTime, DataModel::ActionReturnStatus::FixedStatus::kWriteSuccessNoOp);
+    VerifyOrReturnError(holdTime >= mHoldTimeLimits.holdTimeMin, CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrReturnError(holdTime <= mHoldTimeLimits.holdTimeMax, CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrReturnError(holdTime != mHoldTime, CHIP_NO_ERROR);
 
     mHoldTime = holdTime;
     NotifyAttributeChanged(Attributes::HoldTime::Id);
@@ -354,12 +343,12 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::SetHoldTime(uint16_t
     // Save the value to persistence
     if (mContext != nullptr)
     {
-        RETURN_SAFELY_IGNORED mContext->attributeStorage.WriteValue(
+        LogErrorOnFailure(mContext->attributeStorage.WriteValue(
             { mPath.mEndpointId, AmbientContextSensing::Id, Attributes::HoldTime::Id },
-            { reinterpret_cast<const uint8_t *>(&mHoldTime), sizeof(mHoldTime) });
+            { reinterpret_cast<const uint8_t *>(&mHoldTime), sizeof(mHoldTime) }));
     }
 
-    return Protocols::InteractionModel::Status::Success;
+    return CHIP_NO_ERROR;
 }
 
 void AmbientContextSensingCluster::SetHoldTimeLimits(
@@ -386,7 +375,8 @@ void AmbientContextSensingCluster::SetHoldTimeLimits(
     if ((mHoldTime < mHoldTimeLimits.holdTimeMin) || (mHoldTimeLimits.holdTimeMax < mHoldTime))
     {
         // HoldTime is out of the new bounds. Resetting to the new default value
-        SetHoldTime(mHoldTimeLimits.holdTimeDefault);
+        ChipLogProgress(Zcl, "HoldTime is out of the new bounds. Resetting to the new default value");
+        LogErrorOnFailure(SetHoldTime(mHoldTimeLimits.holdTimeDefault));
     }
 }
 
@@ -424,7 +414,7 @@ CHIP_ERROR AmbientContextSensingCluster::SetPredictedActivity(const std::vector<
 void AmbientContextSensingCluster::TimerFired()
 {
     VerifyOrReturn(!mAmbientContextTypeList.empty() || (mObjectCount != 0));
-    System::Clock::Timestamp now = mHoldTimeDelegate->GetCurrentMonotonicTimestamp();
+    System::Clock::Timestamp now = mHoldTimeDelegate.GetCurrentMonotonicTimestamp();
     RemoveExpiredItems(mAmbientContextTypeList, now);
 
     // Update the detection attribute
@@ -538,6 +528,7 @@ void AmbientContextSensingCluster::UpdateDetectionAttributes()
     }
     if (mContext == nullptr)
     {
+        // Skip the following behavior that sends events when the conditions are met.
         return;
     }
     for (auto i = 0; i < 4; i++)
@@ -587,15 +578,15 @@ void AmbientContextSensingCluster::UpdateEventTimeout()
 {
     if (mAmbientContextTypeList.empty() && mObjectCount == 0)
     {
-        if (mHoldTimeDelegate->IsTimerActive(this))
+        if (mHoldTimeDelegate.IsTimerActive(this))
         {
-            mHoldTimeDelegate->CancelTimer(this);
+            mHoldTimeDelegate.CancelTimer(this);
         }
         return;
     }
 
     // Find the earliest time out event
-    const System::Clock::Timestamp now = mHoldTimeDelegate->GetCurrentMonotonicTimestamp();
+    const System::Clock::Timestamp now = mHoldTimeDelegate.GetCurrentMonotonicTimestamp();
     System::Clock::Timeout remainingTime;
     System::Clock::Timestamp earliestDetectEndTime = FindEarliestEndTimestamp(mAmbientContextTypeList);
 
@@ -610,11 +601,11 @@ void AmbientContextSensingCluster::UpdateEventTimeout()
     }
 
     // Update the timer
-    if (mHoldTimeDelegate->IsTimerActive(this))
+    if (mHoldTimeDelegate.IsTimerActive(this))
     {
-        mHoldTimeDelegate->CancelTimer(this);
+        mHoldTimeDelegate.CancelTimer(this);
     }
-    RETURN_SAFELY_IGNORED mHoldTimeDelegate->StartTimer(this, remainingTime);
+    LogErrorOnFailure(mHoldTimeDelegate.StartTimer(this, remainingTime));
 }
 
 constexpr TagIdentifiedObject TagIdentifiedObjectIds[] = {
@@ -764,6 +755,7 @@ void AmbientContextSensingCluster::RemoveExpiredItems(std::list<AmbientContextSe
     {
         mObjectCountEndTime = System::Clock::Timestamp(0);
         mObjectCount        = 0;
+        NotifyAttributeChanged(Attributes::ObjectCount::Id);
     }
 }
 
@@ -804,7 +796,7 @@ CHIP_ERROR AmbientContextSensingCluster::CheckPredictedActivity(const std::vecto
         if (item.ambientContextType.HasValue())
         {
             auto acsTypeList = item.ambientContextType.Value();
-            VerifyOrReturnError(acsTypeList.size() <= 100, CHIP_ERROR_INCORRECT_STATE);
+            VerifyOrReturnError(acsTypeList.size() <= kMaxPredictedACType, CHIP_ERROR_INCORRECT_STATE);
             for (auto acsType : acsTypeList)
             {
                 switch (acsType.namespaceID)

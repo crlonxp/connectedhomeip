@@ -46,12 +46,12 @@ public:
     ServerClusterRegistration & CreateRegistration(EndpointId endpointId, unsigned clusterInstanceIndex,
                                                    uint32_t optionalAttributeBits, uint32_t featureMap) override
     {
-        AmbientContextSensingCluster::Config config(endpointId);
+        AmbientContextSensingCluster::Config config(endpointId, gDefaultTimerDelegate);
         config.WithFeatures(static_cast<Feature>(featureMap));
         constexpr chip::app::Clusters::AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type kDefaultHoldTimeLimits = {
             .holdTimeMin = kDefaultHoldTimeMin, .holdTimeMax = kDefaultHoldTimeMax, .holdTimeDefault = kDefaultHoldTimeDefault
         };
-        config.WithHoldTime(kDefaultHoldTimeLimits.holdTimeDefault, kDefaultHoldTimeLimits, gDefaultTimerDelegate);
+        config.WithHoldTime(kDefaultHoldTimeLimits.holdTimeDefault, kDefaultHoldTimeLimits);
         gServers[clusterInstanceIndex].Create(config);
         return gServers[clusterInstanceIndex].Registration();
     }
