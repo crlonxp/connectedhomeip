@@ -112,6 +112,6 @@ CHIP_ERROR AmbientContextSensingDelegateImpl::DelDetection(const uint8_t & id)
     chip::Platform::Delete(mAmbientContextTypeList[id]);
 
     mAmbientContextTypeList[id] = nullptr;
-    
+
     return CHIP_NO_ERROR;
 }
