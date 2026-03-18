@@ -34,6 +34,15 @@ AmbientContextSensingCluster::AmbientContextSensingCluster(const Config & config
     mHoldTime = std::clamp(config.mHoldTime, mHoldTimeLimits.holdTimeMin, mHoldTimeLimits.holdTimeMax);
 }
 
+AmbientContextSensingCluster::~AmbientContextSensingCluster()
+{
+    if (mACSDelegate != nullptr)
+    {
+        chip::Platform::Delete(mACSDelegate);
+        mACSDelegate = nullptr;
+    }
+}
+
 CHIP_ERROR AmbientContextSensingCluster::Startup(ServerClusterContext & context)
 {
     ReturnErrorOnFailure(DefaultServerCluster::Startup(context));
@@ -62,6 +71,8 @@ CHIP_ERROR AmbientContextSensingCluster::Startup(ServerClusterContext & context)
 
 void AmbientContextSensingCluster::Shutdown(ClusterShutdownType shutdownType)
 {
+    mAmbientContextTypeList.Clear();
+    mAmbientContextTypeListSize = 0;
     mHoldTimeDelegate.CancelTimer(this);
     DefaultServerCluster::Shutdown(shutdownType);
 }
@@ -157,11 +168,13 @@ CHIP_ERROR AmbientContextSensingCluster::Attributes(const ConcreteClusterPath & 
     return listBuilder.Append(Span(AmbientContextSensing::Attributes::kMandatoryMetadata), Span(optionalAttributes));
 }
 
-CHIP_ERROR AmbientContextSensingCluster::SetAmbientContextTypeSupported(const std::vector<SemanticTagType> & ACTypeList)
+CHIP_ERROR AmbientContextSensingCluster::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
 {
-    VerifyOrReturnError(ACTypeList.size() <= kMaxACTypeSupported, CHIP_ERROR_INVALID_ARGUMENT);
     ReturnErrorOnFailure(CheckInputSupportedType(ACTypeList));
-    mAmbientContextTypeSupportedList = ACTypeList;
+    VerifyOrReturnError(mACSDelegate != nullptr, CHIP_ERROR_INCORRECT_STATE);
+
+    ReturnErrorOnFailure(mACSDelegate->SetAmbientContextTypeSupported(ACTypeList));
+
     return CHIP_NO_ERROR;
 }
 
@@ -170,33 +183,41 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
     VerifyOrReturnError(sensedEvent.ambientContextSensed.size() > 0, CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrReturnError(sensedEvent.ambientContextSensed.size() <= kMaxACSensed, CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrReturnError(IsSupportedEvent(sensedEvent), CHIP_ERROR_INCORRECT_STATE);
+    VerifyOrReturnError(mACSDelegate!=nullptr, CHIP_ERROR_INCORRECT_STATE);
 
     // If there have already been mSimultaneousDetectionLimit items in mAmbientContextTypeList => remove the oldest ones
-    if (mAmbientContextTypeList.size() >= mSimultaneousDetectionLimit)
+    AmbientContextSensed * item;
+    if (mAmbientContextTypeListSize >= mSimultaneousDetectionLimit)
     {
         // One more space is required
-        uint8_t itemsToRemove = static_cast<uint8_t>(mAmbientContextTypeList.size() - mSimultaneousDetectionLimit + 1);
-        for (auto i = 0; i < itemsToRemove; i++)
+        uint8_t itemsToRemove = static_cast<uint8_t>(mAmbientContextTypeListSize - mSimultaneousDetectionLimit + 1);
+
+        for (auto i=0 ; i<itemsToRemove ; i++)
         {
-            mAmbientContextTypeList.pop_back();
+            auto iter = mAmbientContextTypeList.end();
+            --iter;
+            item = &*iter;
+            mAmbientContextTypeList.Remove(item);
+            mAmbientContextTypeListSize --;
+            LogErrorOnFailure(mACSDelegate->DelDetection(item->id));
         }
+
         // The detected status may be different
         UpdateDetectionAttributes();
         // The earliest end-time item may have been removed
         UpdateEventTimeout();
     }
 
-    AmbientContextSensed item{};
     bool fromExisting = false;
-
     for (auto it = mAmbientContextTypeList.begin(); it != mAmbientContextTypeList.end(); ++it)
     {
-        if (CompareAmbientContextSensed(it->mInfo, sensedEvent))
+        if (CompareAmbientContextSensed((*it).mInfo, sensedEvent))
         {
             // Same detection occurs.
             // Need to reorder the event and hold-time
-            item = std::move(*it);
-            mAmbientContextTypeList.erase(it);
+            item = &*it;
+            mAmbientContextTypeList.Remove(item);
+            mAmbientContextTypeListSize --;
             fromExisting = true;
             break;
         }
@@ -206,21 +227,28 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
     if (!fromExisting)
     {
         // The new detection event
+        uint8_t id;
+        ReturnErrorOnFailure(mACSDelegate->AddDetection(id));
+        item = mACSDelegate->GetDetection(id);
+        item->id = id;
         const auto & tags = sensedEvent.ambientContextSensed;
-        item.mOwnedTags.assign(tags.begin(), tags.end());
-
-        item.mInfo = sensedEvent;
-        item.mInfo.ambientContextSensed =
-            chip::app::DataModel::List<const SemanticTagType>(item.mOwnedTags.data(), item.mOwnedTags.size());
-        item.mStartTimestamp = now;
-
+        //item.mOwnedTags.assign(tags.begin(), tags.end());
+        const auto tagCount = tags.size();
+        for (size_t t = 0 ; t < tagCount ; t++)
+        {
+            item->mOwnedTags[t] = tags[t];
+        }
+        item->mInfo = sensedEvent;
+        item->mInfo.ambientContextSensed =
+            chip::app::DataModel::List<const SemanticTagType>(item->mOwnedTags, tagCount);
+        item->mStartTimestamp = now;
         newHoldTime = System::Clock::Seconds16(mHoldTime);
     }
     else
     {
         // The event which is detected and whose hold-time has not elapsed
         const System::Clock::Seconds16 elapsedSec =
-            std::chrono::duration_cast<System::Clock::Seconds16>(now - item.mStartTimestamp);
+            std::chrono::duration_cast<System::Clock::Seconds16>(now - item->mStartTimestamp);
 
         System::Clock::Seconds16 holdTimeMaxSec = System::Clock::Seconds16(mHoldTimeLimits.holdTimeMax);
         if (elapsedSec + System::Clock::Seconds16(mHoldTime) <= holdTimeMaxSec)
@@ -232,8 +260,14 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
             newHoldTime = holdTimeMaxSec - elapsedSec;
         }
     }
-    item.mEndTimestamp = item.mStartTimestamp + newHoldTime;
-    mAmbientContextTypeList.push_front(std::move(item));
+    item->mEndTimestamp = item->mStartTimestamp + newHoldTime;
+    if (!fromExisting)
+    {
+        SendDetectStartEvent(*item);
+    }
+    mAmbientContextTypeList.PushFront(item);
+    mAmbientContextTypeListSize ++;
+
     UpdateDetectionAttributes();
 
     // Update the timer if required.
@@ -246,15 +280,17 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
 DataModel::ActionReturnStatus AmbientContextSensingCluster::SetObjectCountConfig(const ObjectCountConfigType & objectCountConfig)
 {
     auto newObjectCountConfig = objectCountConfig;
-
     VerifyOrReturnError(newObjectCountConfig.objectCountThreshold >= kMinObjectCount,
                         Protocols::InteractionModel::Status::ConstraintError);
+    VerifyOrReturnError(mACSDelegate!=nullptr, Protocols::InteractionModel::Status::ConstraintError);
+
     if (newObjectCountConfig.countingObject.mfgCode.IsNull())
     {
         VerifyOrReturnError(newObjectCountConfig.countingObject.namespaceID == kNamespaceIdentifiedObject,
                             Protocols::InteractionModel::Status::ConstraintError);
         bool inList = false;
-        for (auto item : mAmbientContextTypeSupportedList)
+        auto ACSSupportedList = mACSDelegate->GetAmbientContextTypeSupported();
+        for (auto item : ACSSupportedList)
         {
             if (item.tag == newObjectCountConfig.countingObject.tag)
             {
@@ -288,6 +324,7 @@ CHIP_ERROR AmbientContextSensingCluster::SetObjectCount(uint16_t objectCount)
 {
     VerifyOrReturnError((mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification)),
                         CHIP_ERROR_INCORRECT_STATE);
+    VerifyOrReturnError(objectCount >= 1, CHIP_ERROR_INVALID_ARGUMENT);
     if (objectCount == mObjectCount)
     {
         return CHIP_NO_ERROR;
@@ -295,9 +332,11 @@ CHIP_ERROR AmbientContextSensingCluster::SetObjectCount(uint16_t objectCount)
 
     mObjectCount = objectCount;
     NotifyAttributeChanged(Attributes::ObjectCount::Id);
-    mObjectCountEndTime = mHoldTimeDelegate.GetCurrentMonotonicTimestamp() + System::Clock::Seconds16(mHoldTime);
+    mObjectCountStartTime = mHoldTimeDelegate.GetCurrentMonotonicTimestamp();
+    mObjectCountEndTime = mObjectCountStartTime + System::Clock::Seconds16(mHoldTime);
     UpdateDetectionAttributes();
     UpdateEventTimeout();
+    SendDetectStartEvent(mObjectCountReached, mObjectCount);
 
     return CHIP_NO_ERROR;
 }
@@ -312,15 +351,20 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::SetSimultaneousDetec
     mSimultaneousDetectionLimit = simultaneousDetectionLimit;
     NotifyAttributeChanged(Attributes::SimultaneousDetectionLimit::Id);
 
-    if (mAmbientContextTypeList.size() <= mSimultaneousDetectionLimit)
+    if (mAmbientContextTypeListSize <= mSimultaneousDetectionLimit)
     {
         return Protocols::InteractionModel::Status::Success;
     }
     // Resize the list of AmbientContextType list if the updated limitation becomes smaller than it's current length
-    uint8_t itemsToRemove = static_cast<uint8_t>(mAmbientContextTypeList.size() - mSimultaneousDetectionLimit);
-    for (auto i = 0; i < itemsToRemove; i++)
+    uint8_t itemsToRemove = static_cast<uint8_t>(mAmbientContextTypeListSize - mSimultaneousDetectionLimit);
+    for (auto i=0 ; i<itemsToRemove ; i++)
     {
-        mAmbientContextTypeList.pop_back();
+        auto iter = mAmbientContextTypeList.end();
+        --iter;
+        AmbientContextSensed * item = &*iter;
+        mAmbientContextTypeList.Remove(item);
+        mAmbientContextTypeListSize --;
+        LogErrorOnFailure(mACSDelegate->DelDetection(item->id));
     }
 
     // The detected status may be different
@@ -380,42 +424,21 @@ void AmbientContextSensingCluster::SetHoldTimeLimits(
     }
 }
 
-CHIP_ERROR AmbientContextSensingCluster::SetPredictedActivity(const std::vector<PredictedActivityType> & predictedActivityList)
+CHIP_ERROR AmbientContextSensingCluster::SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList)
 {
     VerifyOrReturnError(predictedActivityList.size() <= kMaxPredictedActivity, CHIP_ERROR_INVALID_ARGUMENT);
     ReturnErrorOnFailure(CheckPredictedActivity(predictedActivityList));
+    VerifyOrReturnError(mACSDelegate != nullptr, CHIP_ERROR_INCORRECT_STATE);
 
-    // Destroy the old context
-    mPredictedActivityList.clear();
-    mPredictedActivityList.shrink_to_fit();
-    // Copy the input vector into our local container.
-    mPredictedActivityList.resize(predictedActivityList.size());
-    for (size_t i = 0; i < predictedActivityList.size(); i++)
-    {
-        const auto & src = predictedActivityList[i];
-        auto & dst       = mPredictedActivityList[i];
-        dst.mInfo        = src;
-        if (!src.ambientContextType.HasValue())
-        {
-            dst.mOwnedTags.clear();
-            dst.mInfo.ambientContextType.ClearValue();
-            continue;
-        }
-
-        const auto & acTypeList = src.ambientContextType.Value();
-
-        dst.mOwnedTags.assign(acTypeList.begin(), acTypeList.end());
-        dst.mInfo.ambientContextType.SetValue(
-            DataModel::List<const SemanticTagType>(dst.mOwnedTags.data(), static_cast<uint16_t>(dst.mOwnedTags.size())));
-    }
+    ReturnErrorOnFailure(mACSDelegate->SetPredictedActivity(predictedActivityList));
     return CHIP_NO_ERROR;
 }
 
 void AmbientContextSensingCluster::TimerFired()
 {
-    VerifyOrReturn(!mAmbientContextTypeList.empty() || (mObjectCount != 0));
+    VerifyOrReturn((mAmbientContextTypeListSize != 0) || (mObjectCount != 0));
     System::Clock::Timestamp now = mHoldTimeDelegate.GetCurrentMonotonicTimestamp();
-    RemoveExpiredItems(mAmbientContextTypeList, now);
+    RemoveExpiredItems(mAmbientContextTypeList, mAmbientContextTypeListSize, now);
 
     // Update the detection attribute
     UpdateDetectionAttributes();
@@ -445,9 +468,12 @@ bool AmbientContextSensingCluster::CompareAmbientContextSensed(const AmbientCont
 CHIP_ERROR AmbientContextSensingCluster::ReadAmbientContextTypeSupported(BitFlags<AmbientContextSensing::Feature> features,
                                                                          AttributeValueEncoder & encoder)
 {
-    VerifyOrReturnValue(!mAmbientContextTypeSupportedList.empty(), encoder.EncodeEmptyList());
-    return encoder.EncodeList([this](const auto & encode) -> CHIP_ERROR {
-        for (const auto & item : mAmbientContextTypeSupportedList)
+    VerifyOrReturnValue(mACSDelegate != nullptr, encoder.EncodeEmptyList());
+    auto ACSSupportedList = mACSDelegate->GetAmbientContextTypeSupported();
+    VerifyOrReturnValue(!ACSSupportedList.empty(), encoder.EncodeEmptyList());
+
+    return encoder.EncodeList([&ACSSupportedList](const auto & encode) -> CHIP_ERROR {
+        for (const auto & item : ACSSupportedList)
         {
             ReturnErrorOnFailure(encode.Encode(item));
         }
@@ -457,7 +483,10 @@ CHIP_ERROR AmbientContextSensingCluster::ReadAmbientContextTypeSupported(BitFlag
 
 CHIP_ERROR AmbientContextSensingCluster::ReadAmbientContextType(AttributeValueEncoder & encoder)
 {
-    VerifyOrReturnValue(!mAmbientContextTypeSupportedList.empty(), encoder.EncodeEmptyList());
+    VerifyOrReturnValue(mACSDelegate != nullptr, encoder.EncodeEmptyList());
+    // If the supported_list is empty => No detection can be added
+    auto ACSSupportedList = mACSDelegate->GetAmbientContextTypeSupported();
+    VerifyOrReturnValue(!ACSSupportedList.empty(), encoder.EncodeEmptyList());
 
     return encoder.EncodeList([this](const auto & encode) -> CHIP_ERROR {
         for (const auto & item : mAmbientContextTypeList)
@@ -468,115 +497,108 @@ CHIP_ERROR AmbientContextSensingCluster::ReadAmbientContextType(AttributeValueEn
     });
 }
 
+void AmbientContextSensingCluster::SendDetectStartEvent(const AmbientContextSensed & ACSItem)
+{
+    VerifyOrReturn(mContext != nullptr);
+    Events::AmbientContextDetectStarted::Type event;
+    event.ambientContextDetected.SetValue(ACSItem.mInfo);
+    mContext->interactionContext.eventsGenerator.GenerateEvent(event, mPath.mEndpointId);
+}
+
+void AmbientContextSensingCluster::SendDetectStartEvent(const bool objectCountReached, const uint16_t objectCount)
+{
+    VerifyOrReturn(mContext != nullptr);
+    VerifyOrReturn(mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification));
+    // Constraint of ObjectCount in AmbientContextDetectedStarted Event
+    VerifyOrReturn(objectCount >= 1);
+
+    Events::AmbientContextDetectStarted::Type event;
+    event.objectCountReached.SetValue(objectCountReached);
+    event.objectCount.SetValue(objectCount);
+    mContext->interactionContext.eventsGenerator.GenerateEvent(event, mPath.mEndpointId);
+}
+
+void AmbientContextSensingCluster::SendDetectEndEvent(const uint64_t eventStartTime)
+{
+    VerifyOrReturn(mContext != nullptr);
+    Events::AmbientContextDetectEnded::Type event;
+    event.eventStartTime = eventStartTime;
+    mContext->interactionContext.eventsGenerator.GenerateEvent(event, mPath.mEndpointId);
+}
+
+/*
+    Update attribute:
+    - HumanActivityDetected
+    - ObjectIdentified
+    - AudioContextDetected
+    - ObjectCountReached
+*/
 void AmbientContextSensingCluster::UpdateDetectionAttributes()
 {
-    bool bHA                = false;
-    bool bOI                = false;
-    bool bAUD               = false;
-    bool bOC                = false;
-    bool needToSendEvent[4] = {};
+    // We need to detect HumanActivity, ObjectIdentified, Audio and ObjectCountReached.
+    // => Reuse the existing definition of feature to avoid duplicate logic
+    BitFlags<Feature> bDetect(0);
 
+    // Check if a detetion is found in AmbientContextType list
     for (const auto & item : mAmbientContextTypeList)
     {
         const auto & tags = item.mInfo.ambientContextSensed;
         for (size_t i = 0; i < tags.size(); i++)
         {
-            auto sense = tags[i];
+            const auto sense = tags[i];
             switch (sense.namespaceID)
             {
             case kNamespaceIdentifiedHumanActivity:
-                bHA = true;
+                bDetect.Set(Feature::kHumanActivity);
                 break;
             case kNamespaceIdentifiedObject:
-                bOI = true;
+                bDetect.Set(Feature::kObjectIdentification);
                 break;
             case kNamespaceIdentifiedSound:
-                bAUD = true;
+                bDetect.Set(Feature::kSoundIdentification);
                 break;
             }
         }
 
-        if (bHA && bOI && bAUD)
+        if (bDetect.Has(Feature::kHumanActivity) && bDetect.Has(Feature::kObjectIdentification) && bDetect.Has(Feature::kSoundIdentification))
         {
+            // All types have been found in mAmbientContextTypeList => No further checking is required
             break;
         }
     }
-    bOC = mObjectCount >= mObjectCountConfig.objectCountThreshold;
-    if (bHA != mHumanActivityDetected)
+
+    // Check if ObjectCountReached should be set or not
+    if (mObjectCount >= mObjectCountConfig.objectCountThreshold)
     {
-        mHumanActivityDetected = bHA;
+        bDetect.Set(Feature::kObjectCounting);
+    }
+    // If the status is different, set the attribute & notify
+    if (bDetect.Has(Feature::kHumanActivity) != mHumanActivityDetected)
+    {
+        mHumanActivityDetected = bDetect.Has(Feature::kHumanActivity);
         NotifyAttributeChanged(Attributes::HumanActivityDetected::Id);
-        needToSendEvent[0] = true;
     }
-    if (bOI != mObjectIdentified)
+    if (bDetect.Has(Feature::kObjectIdentification) != mObjectIdentified)
     {
-        mObjectIdentified = bOI;
+        mObjectIdentified = bDetect.Has(Feature::kObjectIdentification);
         NotifyAttributeChanged(Attributes::ObjectIdentified::Id);
-        needToSendEvent[1] = true;
     }
-    if (bAUD != mAudioContextDetected)
+    if (bDetect.Has(Feature::kSoundIdentification) != mAudioContextDetected)
     {
-        mAudioContextDetected = bAUD;
+        mAudioContextDetected = bDetect.Has(Feature::kSoundIdentification);
         NotifyAttributeChanged(Attributes::AudioContextDetected::Id);
-        needToSendEvent[2] = true;
     }
-    if (bOC != mObjectCountReached)
+    if (bDetect.Has(Feature::kObjectCounting) != mObjectCountReached)
     {
-        mObjectCountReached = bOC;
+        mObjectCountReached = bDetect.Has(Feature::kObjectCounting);
         NotifyAttributeChanged(Attributes::ObjectCountReached::Id);
-        needToSendEvent[3] = true;
-    }
-    if (mContext == nullptr)
-    {
-        // Skip the following behavior that sends events when the conditions are met.
-        return;
-    }
-    for (auto i = 0; i < 4; i++)
-    {
-        if (needToSendEvent[i] == false)
-        {
-            continue;
-        }
-
-        if (mEventNum[i] == chip::EventNumber(0))
-        {
-            Events::AmbientContextDetectStarted::Type event;
-
-            if (i == 3)
-            {
-                // Send the start-event of ObjectCount
-                event.objectCount.SetValue(mObjectCount);
-                auto opt     = mContext->interactionContext.eventsGenerator.GenerateEvent(event, mPath.mEndpointId);
-                mEventNum[i] = opt.value_or(static_cast<chip::EventNumber>(0));
-                continue;
-            }
-            // Send the start-event of others
-            std::vector<AmbientContextSensingType> tmp;
-            tmp.reserve(mAmbientContextTypeList.size());
-            for (const auto & sensed : mAmbientContextTypeList)
-            {
-                tmp.push_back(sensed.mInfo);
-            }
-            event.ambientContextType.SetValue(
-                DataModel::List<const AmbientContextSensingType>(tmp.data(), static_cast<uint16_t>(tmp.size())));
-            auto opt     = mContext->interactionContext.eventsGenerator.GenerateEvent(event, mPath.mEndpointId);
-            mEventNum[i] = opt.value_or(static_cast<chip::EventNumber>(0));
-        }
-        else
-        {
-            // Sending End-Event
-            Events::AmbientContextDetectEnded::Type event;
-            event.startEventNumber = mEventNum[i];
-            mContext->interactionContext.eventsGenerator.GenerateEvent(event, mPath.mEndpointId);
-            mEventNum[i] = chip::EventNumber(0);
-        }
     }
 }
 
 // Find the next-timeout to remove the item in mAmbientContextTypeList
 void AmbientContextSensingCluster::UpdateEventTimeout()
 {
-    if (mAmbientContextTypeList.empty() && mObjectCount == 0)
+    if (mAmbientContextTypeListSize == 0 && mObjectCount == 0)
     {
         if (mHoldTimeDelegate.IsTimerActive(this))
         {
@@ -588,7 +610,7 @@ void AmbientContextSensingCluster::UpdateEventTimeout()
     // Find the earliest time out event
     const System::Clock::Timestamp now = mHoldTimeDelegate.GetCurrentMonotonicTimestamp();
     System::Clock::Timeout remainingTime;
-    System::Clock::Timestamp earliestDetectEndTime = FindEarliestEndTimestamp(mAmbientContextTypeList);
+    System::Clock::Timestamp earliestDetectEndTime = FindEarliestEndTimestamp();
 
     if (earliestDetectEndTime <= now)
     {
@@ -662,7 +684,7 @@ static uint8_t TagToIndex(const chip::Span<const T> & SpanId, T tag)
     2. A SemanticTagType is duplicated
     3. The namespaceId is not known
 */
-CHIP_ERROR AmbientContextSensingCluster::CheckInputSupportedType(const std::vector<SemanticTagType> & ACTSupportedList)
+CHIP_ERROR AmbientContextSensingCluster::CheckInputSupportedType(const Span<SemanticTagType> & ACTSupportedList)
 {
     // Remove the type if the feature is disabled or duplicated
     bool pickType_HA[std::size(TagIdentifiedHumanActivityIds)] = {};
@@ -714,11 +736,13 @@ CHIP_ERROR AmbientContextSensingCluster::CheckInputSupportedType(const std::vect
 bool AmbientContextSensingCluster::IsSupportedEvent(const AmbientContextSensingType & sensedEvent)
 {
     const auto tags = sensedEvent.ambientContextSensed;
+    VerifyOrReturnValue(mACSDelegate!=nullptr, false);
     for (size_t i = 0; i < tags.size(); i++)
     {
         bool isSupported = false;
 
-        for (const auto & supported : mAmbientContextTypeSupportedList)
+        auto ACSSupportedList = mACSDelegate->GetAmbientContextTypeSupported();
+        for (const auto & supported : ACSSupportedList)
         {
             if ((tags[i].namespaceID == supported.namespaceID) && (tags[i].tag == supported.tag))
             {
@@ -736,19 +760,23 @@ bool AmbientContextSensingCluster::IsSupportedEvent(const AmbientContextSensingT
     return true;
 }
 
-void AmbientContextSensingCluster::RemoveExpiredItems(std::list<AmbientContextSensed> & eventList,
+void AmbientContextSensingCluster::RemoveExpiredItems(IntrusiveList<AmbientContextSensed> & eventList, uint8_t & listSize,
                                                       const System::Clock::Timestamp & now)
 {
+    VerifyOrReturn(mACSDelegate != nullptr);
     // Remove the ones which expires
+    AmbientContextSensed * pitem;
+
     for (auto it = eventList.begin(); it != eventList.end();)
     {
-        if (it->mEndTimestamp <= now)
+        pitem = &*it;
+        ++it;
+        if (pitem->mEndTimestamp <= now)
         {
-            it = eventList.erase(it);
-        }
-        else
-        {
-            ++it;
+            eventList.Remove(pitem);
+            listSize --;
+            SendDetectEndEvent(pitem->mStartTimestamp.count());
+            LogErrorOnFailure(mACSDelegate->DelDetection(pitem->id));
         }
     }
     if (mObjectCountEndTime <= now)
@@ -756,16 +784,20 @@ void AmbientContextSensingCluster::RemoveExpiredItems(std::list<AmbientContextSe
         mObjectCountEndTime = System::Clock::Timestamp(0);
         mObjectCount        = 0;
         NotifyAttributeChanged(Attributes::ObjectCount::Id);
+        // Send the DetectEndEvent
+        SendDetectEndEvent(mObjectCountStartTime.count());
+        mObjectCountStartTime = System::Clock::Timestamp(0);
     }
 }
 
-System::Clock::Timestamp AmbientContextSensingCluster::FindEarliestEndTimestamp(const std::list<AmbientContextSensed> & eventList)
+System::Clock::Timestamp AmbientContextSensingCluster::FindEarliestEndTimestamp()
 {
     System::Clock::Timestamp earliestTimestamp = System::Clock::Timestamp(0);
+    IntrusiveList<AmbientContextSensed> & eventList = mAmbientContextTypeList;
 
-    if (!eventList.empty())
+    if (mAmbientContextTypeListSize > 0)
     {
-        const auto it = std::min_element(
+        auto it = std::min_element(
             eventList.begin(), eventList.end(),
             [](const AmbientContextSensed & a, const AmbientContextSensed & b) { return a.mEndTimestamp < b.mEndTimestamp; });
         earliestTimestamp = it->mEndTimestamp;
@@ -780,7 +812,7 @@ System::Clock::Timestamp AmbientContextSensingCluster::FindEarliestEndTimestamp(
     return earliestTimestamp;
 }
 
-CHIP_ERROR AmbientContextSensingCluster::CheckPredictedActivity(const std::vector<PredictedActivityType> & predictedActivityList)
+CHIP_ERROR AmbientContextSensingCluster::CheckPredictedActivity(const Span<PredictedActivityType> & predictedActivityList)
 {
     VerifyOrReturnError(mFeatureMap.Has(Feature::kPredictedActivity), CHIP_ERROR_INCORRECT_STATE);
 
@@ -832,10 +864,11 @@ CHIP_ERROR AmbientContextSensingCluster::CheckPredictedActivity(const std::vecto
 
 CHIP_ERROR AmbientContextSensingCluster::ReadPredictedActivity(AttributeValueEncoder & encoder)
 {
-    VerifyOrReturnValue(!mPredictedActivityList.empty(), encoder.EncodeEmptyList());
+    VerifyOrReturnValue(mACSDelegate != nullptr, encoder.EncodeEmptyList());
 
     return encoder.EncodeList([this](const auto & encode) -> CHIP_ERROR {
-        for (const auto & item : mPredictedActivityList)
+        auto predictedActivityList = mACSDelegate->GetPredictedActivity();
+        for (const auto & item : predictedActivityList)
         {
             ReturnErrorOnFailure(encode.Encode(item.mInfo));
         }

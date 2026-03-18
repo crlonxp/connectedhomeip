@@ -68,6 +68,7 @@ source_set("chip-all-clusters-common") {
     "ButtonEventsSimulator.h",
     "ValveControlDelegate.cpp",
     "WindowCoveringManager.cpp",
+    "AmbientContextSensingDelegateImpl.cpp",
     "include/tv-callbacks.cpp",
     "include/tv-callbacks.h",
     "main-common.cpp",

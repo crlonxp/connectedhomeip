@@ -21,9 +21,8 @@
 #include <app/server-cluster/DefaultServerCluster.h>
 #include <app/server-cluster/ServerClusterContext.h>
 #include <lib/support/Span.h>
-#include <list>
+#include <lib/support/IntrusiveList.h>
 #include <platform/DefaultTimerDelegate.h>
-#include <vector>
 
 namespace chip::app::Clusters {
 // Default value for implementation sake. They should be set by device vendor
@@ -45,6 +44,8 @@ using SemanticTagType           = Globals::Structs::SemanticTagStruct::Type;
 using AmbientContextSensingType = AmbientContextSensing::Structs::AmbientContextTypeStruct::Type;
 using ObjectCountConfigType     = AmbientContextSensing::Structs::ObjectCountConfigStruct::Type;
 using PredictedActivityType     = AmbientContextSensing::Structs::PredictedActivityStruct::Type;
+
+class AmbientContextSensingDelegate;
 
 class AmbientContextSensingCluster : public DefaultServerCluster, public TimerContext
 {
@@ -83,22 +84,23 @@ public:
         TimerDelegate & mHoldTimeDelegate;
     };
 
-    struct AmbientContextSensed
+    struct AmbientContextSensed : public IntrusiveListNodeBase<>
     {
         AmbientContextSensingType mInfo;
-        std::vector<SemanticTagType> mOwnedTags;
+        SemanticTagType mOwnedTags[kMaxACSensed];
         System::Clock::Timestamp mStartTimestamp = System::Clock::Milliseconds64(0);
         System::Clock::Timestamp mEndTimestamp;
+        uint8_t id;
     };
 
     struct PredictActivity
     {
         PredictedActivityType mInfo;
-        std::vector<SemanticTagType> mOwnedTags;
+        std::unique_ptr<SemanticTagType[]> mOwnedTags;
     };
 
     AmbientContextSensingCluster(const Config & config);
-    ~AmbientContextSensingCluster() = default;
+    ~AmbientContextSensingCluster();
 
     CHIP_ERROR Startup(ServerClusterContext & context) override;
     void Shutdown(ClusterShutdownType shutdownType) override;
@@ -110,7 +112,7 @@ public:
                                                  AttributeValueDecoder & decoder) override;
     CHIP_ERROR Attributes(const ConcreteClusterPath & path, ReadOnlyBufferBuilder<DataModel::AttributeEntry> & builder) override;
 
-    CHIP_ERROR SetAmbientContextTypeSupported(const std::vector<SemanticTagType> & ACTypeList);
+    CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList);
     CHIP_ERROR AddDetection(const AmbientContextSensingType & sensedEvent);
     DataModel::ActionReturnStatus SetObjectCountConfig(const ObjectCountConfigType & objectCountConfig);
     CHIP_ERROR SetObjectCount(uint16_t objectCount);
@@ -118,31 +120,35 @@ public:
     CHIP_ERROR SetHoldTime(uint16_t holdTime);
     uint16_t GetHoldTime() const { return mHoldTime; }
     void SetHoldTimeLimits(const AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type & holdTimeLimits);
-    CHIP_ERROR SetPredictedActivity(const std::vector<PredictedActivityType> & predictedActivity);
+    CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivity);
     void TimerFired() override;
+    void SetDelegate(AmbientContextSensingDelegate * delegate) { mACSDelegate = delegate; };
 
 private:
     bool CompareAmbientContextSensed(const AmbientContextSensingType & sensedEvent, const AmbientContextSensingType & newEvent);
     CHIP_ERROR ReadAmbientContextTypeSupported(BitFlags<AmbientContextSensing::Feature> features, AttributeValueEncoder & encoder);
     CHIP_ERROR ReadAmbientContextType(AttributeValueEncoder & encoder);
+    void SendDetectStartEvent(const AmbientContextSensed & ACSItem);
+    void SendDetectStartEvent(const bool objectCountReached, const uint16_t objectCount);
+    void SendDetectEndEvent(const uint64_t eventStartTime);
     void UpdateDetectionAttributes();
     void UpdateEventTimeout();
-    CHIP_ERROR CheckInputSupportedType(const std::vector<SemanticTagType> & ACTSupportedList);
+    CHIP_ERROR CheckInputSupportedType(const Span<SemanticTagType> & ACTSupportedList);
     bool IsSupportedEvent(const AmbientContextSensingType & sensedEvent);
-    void RemoveExpiredItems(std::list<AmbientContextSensed> & eventList, const System::Clock::Timestamp & now);
-    System::Clock::Timestamp FindEarliestEndTimestamp(const std::list<AmbientContextSensed> & eventList);
-    CHIP_ERROR CheckPredictedActivity(const std::vector<PredictedActivityType> & predictedActivityList);
+    void RemoveExpiredItems(IntrusiveList<AmbientContextSensed> & eventList, uint8_t & listSize, const System::Clock::Timestamp & now);
+
+    System::Clock::Timestamp FindEarliestEndTimestamp();
+    CHIP_ERROR CheckPredictedActivity(const Span<PredictedActivityType> & predictedActivityList);
     CHIP_ERROR ReadPredictedActivity(AttributeValueEncoder & encoder);
 
     const BitMask<AmbientContextSensing::Feature> mFeatureMap;
     bool mHumanActivityDetected = false;
     bool mObjectIdentified      = false;
     bool mAudioContextDetected  = false;
-    // Event is set while one of HADetected, ObjectIdentified, AudioContexted or ObjectCountReached is from false to true
-    chip::EventNumber mEventNum[4] = {};
+    AmbientContextSensingDelegate * mACSDelegate = nullptr;
 
-    std::vector<SemanticTagType> mAmbientContextTypeSupportedList;
-    std::list<AmbientContextSensed> mAmbientContextTypeList;
+    IntrusiveList<AmbientContextSensed> mAmbientContextTypeList;
+    uint8_t mAmbientContextTypeListSize = 0;
 
     uint8_t mSimultaneousDetectionLimit = kDefaultSimultaneousDetectionLimit;
     bool mObjectCountReached            = false;
@@ -154,14 +160,28 @@ private:
             .objectCountThreshold = kDefaultCountThreshold,
         };
     uint16_t mObjectCount = 0;
+    System::Clock::Timestamp mObjectCountStartTime;
     System::Clock::Timestamp mObjectCountEndTime;
     uint16_t mHoldTime                                                         = kDefaultHoldTimeDefault;
     AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = kDefaultHoldTimeMin,
                                                                                    .holdTimeMax     = kDefaultHoldTimeMax,
                                                                                    .holdTimeDefault = kDefaultHoldTimeDefault };
     TimerDelegate & mHoldTimeDelegate;
+};
 
-    std::vector<PredictActivity> mPredictedActivityList;
+class AmbientContextSensingDelegate
+{
+public:
+    virtual ~AmbientContextSensingDelegate() = default;
+    virtual CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) = 0;
+    virtual Span<SemanticTagType> & GetAmbientContextTypeSupported() = 0;
+
+    virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList) = 0;
+    virtual Span<AmbientContextSensingCluster::PredictActivity> & GetPredictedActivity() = 0;
+
+    virtual CHIP_ERROR AddDetection(uint8_t & id) = 0;
+    virtual AmbientContextSensingCluster::AmbientContextSensed* GetDetection(const uint8_t id) = 0;
+    virtual CHIP_ERROR DelDetection(const uint8_t & id) = 0;
 };
 
 } // namespace chip::app::Clusters

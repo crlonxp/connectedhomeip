@@ -38,10 +38,12 @@
 #include "tcc-mode.h"
 #include "thermostat-delegate-impl.h"
 #include "tls-client-management-instance.h"
+#include "AmbientContextSensingDelegateImpl.h"
 
 #include <Options.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
 #include <app/CommandHandler.h>
+#include <app/clusters/ambient-context-sensing-server/CodegenIntegration.h>
 #include <app/clusters/diagnostic-logs-server/diagnostic-logs-server.h>
 #include <app/clusters/groupcast/GroupcastCluster.h>
 #include <app/clusters/identify-server/IdentifyCluster.h>
@@ -288,6 +290,14 @@ void emberAfWindowCoveringClusterInitCallback(chip::EndpointId endpoint)
     sWindowCoveringManager.Init(endpoint);
     Clusters::WindowCovering::SetDefaultDelegate(endpoint, &sWindowCoveringManager);
     Clusters::WindowCovering::ConfigStatusUpdateFeatures(endpoint);
+}
+
+void emberAfAmbientContextSensingClusterInitCallback(chip::EndpointId endpoint)
+{
+    auto* cluster = Clusters::AmbientContextSensing::FindClusterOnEndpoint(endpoint);
+    Clusters::AmbientContextSensingDelegateImpl * ACSDelegate = chip::Platform::New <Clusters::AmbientContextSensingDelegateImpl>();
+    VerifyOrReturn(ACSDelegate != nullptr);
+    cluster->SetDelegate(ACSDelegate);
 }
 
 using namespace chip::app::Clusters::DiagnosticLogs;
