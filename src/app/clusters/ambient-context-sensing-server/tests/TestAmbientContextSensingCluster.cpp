@@ -134,7 +134,7 @@ private:
 
 TestACSDelegate::~TestACSDelegate()
 {
-    for (uint8_t id = 0 ; id < MATTER_ARRAY_SIZE(mAmbientContextTypeList) ; id++)
+    for (uint8_t id = 0; id < MATTER_ARRAY_SIZE(mAmbientContextTypeList); id++)
     {
         if (mAmbientContextTypeList[id] == nullptr)
         {
@@ -173,12 +173,12 @@ CHIP_ERROR TestACSDelegate::SetPredictedActivity(const Span<PredictedActivityTyp
         }
 
         const auto & acTypeList = src.ambientContextType.Value();
-        const auto tagCount = acTypeList.size();
+        const auto tagCount     = acTypeList.size();
         VerifyOrReturnError(tagCount > 0, CHIP_ERROR_INVALID_ARGUMENT);
         VerifyOrReturnError(tagCount <= kMaxPredictedACType, CHIP_ERROR_INVALID_ARGUMENT);
 
         dst.mOwnedTags = std::make_unique<SemanticTagType[]>(tagCount);
-        for (size_t t = 0 ; t < tagCount ; t++)
+        for (size_t t = 0; t < tagCount; t++)
         {
             dst.mOwnedTags[t] = acTypeList[t];
         }
@@ -195,7 +195,7 @@ CHIP_ERROR TestACSDelegate::AddDetection(uint8_t & id)
 {
     uint8_t i;
 
-    for (i = 0 ; i<kMaxSimultaneousDetectionLimit ; i++)
+    for (i = 0; i < kMaxSimultaneousDetectionLimit; i++)
     {
         if (mAmbientContextTypeList[i] == nullptr)
         {
@@ -399,7 +399,8 @@ TEST_F(TestAmbientContextSensingCluster, TestAmbientContextTypeSupported)
     EXPECT_EQ(size, 0u);
 
     // Push the unsupported one
-    Span<SemanticTagType> ACTypeList_unsupport = Span<SemanticTagType>(kACTSupported_unsupport, MATTER_ARRAY_SIZE(kACTSupported_unsupport));
+    Span<SemanticTagType> ACTypeList_unsupport =
+        Span<SemanticTagType>(kACTSupported_unsupport, MATTER_ARRAY_SIZE(kACTSupported_unsupport));
     EXPECT_EQ(cluster.SetAmbientContextTypeSupported(ACTypeList_unsupport), CHIP_ERROR_INVALID_ARGUMENT);
     EXPECT_EQ(tester.ReadAttribute(Attributes::AmbientContextTypeSupported::Id, out), CHIP_NO_ERROR);
     EXPECT_EQ(out.ComputeSize(&size), CHIP_NO_ERROR);
@@ -889,7 +890,8 @@ TEST_F(TestAmbientContextSensingCluster, TestPredictActivity)
             .confidence         = 100,
         },
     };
-    Span<PredictedActivityType> predictActivity = Span<PredictedActivityType>(predictActivityData, MATTER_ARRAY_SIZE(predictActivityData));
+    Span<PredictedActivityType> predictActivity =
+        Span<PredictedActivityType>(predictActivityData, MATTER_ARRAY_SIZE(predictActivityData));
 
     EXPECT_EQ(cluster.SetPredictedActivity(predictActivity), CHIP_NO_ERROR);
 

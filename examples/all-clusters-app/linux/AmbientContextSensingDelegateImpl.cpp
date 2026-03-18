@@ -24,7 +24,7 @@ using namespace chip::app::Clusters;
 
 AmbientContextSensingDelegateImpl::~AmbientContextSensingDelegateImpl()
 {
-    for (uint8_t id = 0 ; id < MATTER_ARRAY_SIZE(mAmbientContextTypeList) ; id++)
+    for (uint8_t id = 0; id < MATTER_ARRAY_SIZE(mAmbientContextTypeList); id++)
     {
         if (mAmbientContextTypeList[id] == nullptr)
         {
@@ -64,12 +64,12 @@ CHIP_ERROR AmbientContextSensingDelegateImpl::SetPredictedActivity(const Span<Pr
         }
 
         const auto & acTypeList = src.ambientContextType.Value();
-        const auto tagCount = acTypeList.size();
+        const auto tagCount     = acTypeList.size();
         VerifyOrReturnError(tagCount > 0, CHIP_ERROR_INVALID_ARGUMENT);
         VerifyOrReturnError(tagCount <= kMaxPredictedACType, CHIP_ERROR_INVALID_ARGUMENT);
 
         dst.mOwnedTags = std::make_unique<SemanticTagType[]>(tagCount);
-        for (size_t t = 0 ; t < tagCount ; t++)
+        for (size_t t = 0; t < tagCount; t++)
         {
             dst.mOwnedTags[t] = acTypeList[t];
         }
@@ -85,7 +85,7 @@ CHIP_ERROR AmbientContextSensingDelegateImpl::SetPredictedActivity(const Span<Pr
 CHIP_ERROR AmbientContextSensingDelegateImpl::AddDetection(uint8_t & id)
 {
     uint8_t i;
-    for (i = 0 ; i<kMaxSimultaneousDetectionLimit ; i++)
+    for (i = 0; i < kMaxSimultaneousDetectionLimit; i++)
     {
         if (mAmbientContextTypeList[i] == nullptr)
         {

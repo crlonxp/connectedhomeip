@@ -17,6 +17,7 @@
  */
 
 #include "AllClustersCommandDelegate.h"
+#include "AmbientContextSensingDelegateImpl.h"
 #include "AppOptions.h"
 #include "ValveControlDelegate.h"
 #include "WindowCoveringManager.h"
@@ -38,7 +39,6 @@
 #include "tcc-mode.h"
 #include "thermostat-delegate-impl.h"
 #include "tls-client-management-instance.h"
-#include "AmbientContextSensingDelegateImpl.h"
 
 #include <Options.h>
 #include <app-common/zap-generated/attributes/Accessors.h>
@@ -294,8 +294,8 @@ void emberAfWindowCoveringClusterInitCallback(chip::EndpointId endpoint)
 
 void emberAfAmbientContextSensingClusterInitCallback(chip::EndpointId endpoint)
 {
-    auto* cluster = Clusters::AmbientContextSensing::FindClusterOnEndpoint(endpoint);
-    Clusters::AmbientContextSensingDelegateImpl * ACSDelegate = chip::Platform::New <Clusters::AmbientContextSensingDelegateImpl>();
+    auto * cluster                                            = Clusters::AmbientContextSensing::FindClusterOnEndpoint(endpoint);
+    Clusters::AmbientContextSensingDelegateImpl * ACSDelegate = chip::Platform::New<Clusters::AmbientContextSensingDelegateImpl>();
     VerifyOrReturn(ACSDelegate != nullptr);
     cluster->SetDelegate(ACSDelegate);
 }

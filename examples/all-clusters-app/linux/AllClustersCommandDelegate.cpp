@@ -315,8 +315,8 @@ void SetAmbientContextSupportType(Json::Value & jsonValue)
     }
 
     // values to the supported status
-    EndpointId endpointId                  = static_cast<EndpointId>(jsonValue["EndpointId"].asUInt());
-    auto* cluster = AmbientContextSensing::FindClusterOnEndpoint(endpointId);
+    EndpointId endpointId = static_cast<EndpointId>(jsonValue["EndpointId"].asUInt());
+    auto * cluster        = AmbientContextSensing::FindClusterOnEndpoint(endpointId);
     if (cluster == nullptr)
     {
         ChipLogError(NotSpecified, "Failed to find AmbientContextSensingCluster on endpoint %u", endpointId);
@@ -339,7 +339,8 @@ void SetAmbientContextSupportType(Json::Value & jsonValue)
     }
 
     Span<Globals::Structs::SemanticTagStruct::Type> semanticTags;
-    std::unique_ptr<Globals::Structs::SemanticTagStruct::Type[]> tagBuf = std::make_unique<Globals::Structs::SemanticTagStruct::Type[]>(actArray.size());
+    std::unique_ptr<Globals::Structs::SemanticTagStruct::Type[]> tagBuf =
+        std::make_unique<Globals::Structs::SemanticTagStruct::Type[]>(actArray.size());
 
     for (Json::ArrayIndex i = 0; i < actArray.size(); i++)
     {
@@ -417,8 +418,8 @@ void SetAmbientContextDetect(Json::Value & jsonValue)
     }
 
     // values to update the detection status
-    EndpointId endpointId                  = static_cast<EndpointId>(jsonValue["EndpointId"].asUInt());
-    auto * cluster = AmbientContextSensing::FindClusterOnEndpoint(endpointId);
+    EndpointId endpointId = static_cast<EndpointId>(jsonValue["EndpointId"].asUInt());
+    auto * cluster        = AmbientContextSensing::FindClusterOnEndpoint(endpointId);
     if (cluster == nullptr)
     {
         ChipLogError(NotSpecified, "Failed to find AmbientContextSensingCluster");
@@ -493,8 +494,8 @@ void SetPredictedActivity(Json::Value & jsonValue)
         return;
     }
     // values to update the predicted status
-    EndpointId endpointId                  = static_cast<EndpointId>(jsonValue["EndpointId"].asUInt());
-    auto * cluster = AmbientContextSensing::FindClusterOnEndpoint(endpointId);
+    EndpointId endpointId = static_cast<EndpointId>(jsonValue["EndpointId"].asUInt());
+    auto * cluster        = AmbientContextSensing::FindClusterOnEndpoint(endpointId);
     if (cluster == nullptr)
     {
         ChipLogError(NotSpecified, "Failed to find AmbientContextSensingCluster");
@@ -515,7 +516,8 @@ void SetPredictedActivity(Json::Value & jsonValue)
         return;
     }
 
-    std::unique_ptr<AmbientContextSensing::Structs::PredictedActivityStruct::Type[]> predictArrayBuf = std::make_unique<AmbientContextSensing::Structs::PredictedActivityStruct::Type[]>(predictArray.size());
+    std::unique_ptr<AmbientContextSensing::Structs::PredictedActivityStruct::Type[]> predictArrayBuf =
+        std::make_unique<AmbientContextSensing::Structs::PredictedActivityStruct::Type[]>(predictArray.size());
     std::vector<std::vector<Globals::Structs::SemanticTagStruct::Type>> allSemanticTags;
     allSemanticTags.resize(predictArray.size());
 
@@ -572,7 +574,8 @@ void SetPredictedActivity(Json::Value & jsonValue)
         predictAct.ambientContextType.SetValue(tagList);
         predictArrayBuf[i] = predictAct;
     }
-    Span<AmbientContextSensing::Structs::PredictedActivityStruct::Type> predictedActivityArray = Span<AmbientContextSensing::Structs::PredictedActivityStruct::Type>(predictArrayBuf.get(), predictArray.size());
+    Span<AmbientContextSensing::Structs::PredictedActivityStruct::Type> predictedActivityArray =
+        Span<AmbientContextSensing::Structs::PredictedActivityStruct::Type>(predictArrayBuf.get(), predictArray.size());
     TEMPORARY_RETURN_IGNORED cluster->SetPredictedActivity(predictedActivityArray);
 }
 
@@ -599,8 +602,8 @@ void SetObjectCount(Json::Value & jsonValue)
     }
 
     // Set the values of ObjectCount
-    EndpointId endpointId                  = static_cast<EndpointId>(jsonValue["EndpointId"].asUInt());
-    auto * cluster = AmbientContextSensing::FindClusterOnEndpoint(endpointId);
+    EndpointId endpointId = static_cast<EndpointId>(jsonValue["EndpointId"].asUInt());
+    auto * cluster        = AmbientContextSensing::FindClusterOnEndpoint(endpointId);
     if (cluster == nullptr)
     {
         ChipLogError(NotSpecified, "Failed to find AmbientContextSensingCluster");

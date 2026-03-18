@@ -20,8 +20,8 @@
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app/server-cluster/DefaultServerCluster.h>
 #include <app/server-cluster/ServerClusterContext.h>
-#include <lib/support/Span.h>
 #include <lib/support/IntrusiveList.h>
+#include <lib/support/Span.h>
 #include <platform/DefaultTimerDelegate.h>
 
 namespace chip::app::Clusters {
@@ -135,16 +135,17 @@ private:
     void UpdateEventTimeout();
     CHIP_ERROR CheckInputSupportedType(const Span<SemanticTagType> & ACTSupportedList);
     bool IsSupportedEvent(const AmbientContextSensingType & sensedEvent);
-    void RemoveExpiredItems(IntrusiveList<AmbientContextSensed> & eventList, uint8_t & listSize, const System::Clock::Timestamp & now);
+    void RemoveExpiredItems(IntrusiveList<AmbientContextSensed> & eventList, uint8_t & listSize,
+                            const System::Clock::Timestamp & now);
 
     System::Clock::Timestamp FindEarliestEndTimestamp();
     CHIP_ERROR CheckPredictedActivity(const Span<PredictedActivityType> & predictedActivityList);
     CHIP_ERROR ReadPredictedActivity(AttributeValueEncoder & encoder);
 
     const BitMask<AmbientContextSensing::Feature> mFeatureMap;
-    bool mHumanActivityDetected = false;
-    bool mObjectIdentified      = false;
-    bool mAudioContextDetected  = false;
+    bool mHumanActivityDetected                  = false;
+    bool mObjectIdentified                       = false;
+    bool mAudioContextDetected                   = false;
     AmbientContextSensingDelegate * mACSDelegate = nullptr;
 
     IntrusiveList<AmbientContextSensed> mAmbientContextTypeList;
@@ -172,16 +173,16 @@ private:
 class AmbientContextSensingDelegate
 {
 public:
-    virtual ~AmbientContextSensingDelegate() = default;
+    virtual ~AmbientContextSensingDelegate()                                                    = default;
     virtual CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) = 0;
-    virtual Span<SemanticTagType> & GetAmbientContextTypeSupported() = 0;
+    virtual Span<SemanticTagType> & GetAmbientContextTypeSupported()                            = 0;
 
     virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList) = 0;
-    virtual Span<AmbientContextSensingCluster::PredictActivity> & GetPredictedActivity() = 0;
+    virtual Span<AmbientContextSensingCluster::PredictActivity> & GetPredictedActivity()               = 0;
 
-    virtual CHIP_ERROR AddDetection(uint8_t & id) = 0;
-    virtual AmbientContextSensingCluster::AmbientContextSensed* GetDetection(const uint8_t id) = 0;
-    virtual CHIP_ERROR DelDetection(const uint8_t & id) = 0;
+    virtual CHIP_ERROR AddDetection(uint8_t & id)                                               = 0;
+    virtual AmbientContextSensingCluster::AmbientContextSensed * GetDetection(const uint8_t id) = 0;
+    virtual CHIP_ERROR DelDetection(const uint8_t & id)                                         = 0;
 };
 
 } // namespace chip::app::Clusters
