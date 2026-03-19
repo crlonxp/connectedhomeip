@@ -27,6 +27,7 @@ class AmbientContextSensingDelegateImpl : public AmbientContextSensingDelegate
 {
 public:
     AmbientContextSensingDelegateImpl();
+    ~AmbientContextSensingDelegateImpl() = default;
     CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) override;
     Span<SemanticTagType> & GetAmbientContextTypeSupported() override { return mAmbientContextTypeSupportedList; };
 
@@ -43,15 +44,15 @@ public:
     AmbientContextSensingDelegateImpl & operator=(AmbientContextSensingDelegateImpl &&)      = delete;
 
 private:
-    SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported] = {};
+    SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported];
     Span<SemanticTagType> mAmbientContextTypeSupportedList;
 
-    AmbientContextSensingCluster::PredictActivity mPredictActivityBuf[kMaxPredictedActivity] = {};
+    AmbientContextSensingCluster::PredictActivity mPredictActivityBuf[kMaxPredictedActivity];
     Span<AmbientContextSensingCluster::PredictActivity> mPredictedActivityList;
 
     // From spec, constraint of AmbientContextType is 1 to SimultaneousDetectionLimit.
-    AmbientContextSensingCluster::AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit] = {};
-    bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit]                                           = {};
+    AmbientContextSensingCluster::AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit];
+    bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit];
 };
 
 } // namespace Clusters

@@ -112,6 +112,7 @@ class TestACSDelegate : public AmbientContextSensingDelegate
 {
 public:
     TestACSDelegate();
+    ~TestACSDelegate() = default;
     CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) override;
     Span<SemanticTagType> & GetAmbientContextTypeSupported() override { return mAmbientContextTypeSupportedList; };
 
@@ -128,21 +129,24 @@ public:
     TestACSDelegate & operator=(TestACSDelegate &&)      = delete;
 
 private:
-    SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported] = {};
+    SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported];
     Span<SemanticTagType> mAmbientContextTypeSupportedList;
 
-    AmbientContextSensingCluster::PredictActivity mPredictActivityBuf[kMaxPredictedActivity] = {};
+    AmbientContextSensingCluster::PredictActivity mPredictActivityBuf[kMaxPredictedActivity];
     Span<AmbientContextSensingCluster::PredictActivity> mPredictedActivityList;
 
-    AmbientContextSensingCluster::AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit] = {};
-    bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit]                                           = {};
+    AmbientContextSensingCluster::AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit];
+    bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit];
 };
 
 TestACSDelegate::TestACSDelegate() :
     mAmbientContextTypeSupportedList(mAmbientContextTypeSupportedBuf), mPredictedActivityList(mPredictActivityBuf)
 {
+    for (auto &v : mAmbientContextTypeSupportedBuf) v = SemanticTagType{};
     mAmbientContextTypeSupportedList = Span<SemanticTagType>(mAmbientContextTypeSupportedBuf, 0);
+    for (auto &v : mPredictActivityBuf) v = AmbientContextSensingCluster::PredictActivity{};
     mPredictedActivityList           = Span<AmbientContextSensingCluster::PredictActivity>(mPredictActivityBuf, 0);
+    for (auto &v : mAmbientContextTypeListUsed) v = false;
 }
 
 CHIP_ERROR TestACSDelegate::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
