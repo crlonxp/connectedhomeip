@@ -26,6 +26,7 @@ namespace Clusters {
 class AmbientContextSensingDelegateImpl : public AmbientContextSensingDelegate
 {
 public:
+    AmbientContextSensingDelegateImpl();
     CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) override;
     Span<SemanticTagType> & GetAmbientContextTypeSupported() override { return mAmbientContextTypeSupportedList; };
 
@@ -35,6 +36,11 @@ public:
     CHIP_ERROR AddDetection(uint8_t & id) override;
     AmbientContextSensingCluster::AmbientContextSensed * GetDetection(const uint8_t id) override;
     CHIP_ERROR DelDetection(const uint8_t & id) override;
+
+    AmbientContextSensingDelegateImpl(const AmbientContextSensingDelegateImpl&)            = delete;
+    AmbientContextSensingDelegateImpl& operator=(const AmbientContextSensingDelegateImpl&) = delete;
+    AmbientContextSensingDelegateImpl(AmbientContextSensingDelegateImpl&&)                 = delete;
+    AmbientContextSensingDelegateImpl& operator=(AmbientContextSensingDelegateImpl&&)      = delete;
 
 private:
     SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported] = {};
