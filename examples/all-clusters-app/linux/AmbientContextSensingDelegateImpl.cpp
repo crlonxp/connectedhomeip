@@ -22,20 +22,6 @@ using namespace chip;
 using namespace chip::app;
 using namespace chip::app::Clusters;
 
-AmbientContextSensingDelegateImpl::~AmbientContextSensingDelegateImpl()
-{
-    for (uint8_t id = 0; id < MATTER_ARRAY_SIZE(mAmbientContextTypeList); id++)
-    {
-        if (mAmbientContextTypeList[id] == nullptr)
-        {
-            continue;
-        }
-        chip::Platform::Delete(mAmbientContextTypeList[id]);
-
-        mAmbientContextTypeList[id] = nullptr;
-    }
-}
-
 CHIP_ERROR AmbientContextSensingDelegateImpl::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
 {
     VerifyOrReturnError(ACTypeList.size() <= kMaxACTypeSupported, CHIP_ERROR_INVALID_ARGUMENT);
@@ -87,31 +73,29 @@ CHIP_ERROR AmbientContextSensingDelegateImpl::AddDetection(uint8_t & id)
     uint8_t i;
     for (i = 0; i < kMaxSimultaneousDetectionLimit; i++)
     {
-        if (mAmbientContextTypeList[i] == nullptr)
+        if (mAmbientContextTypeListUsed[i] == false)
         {
             break;
         }
     }
     VerifyOrReturnError((i < kMaxSimultaneousDetectionLimit), CHIP_ERROR_INCORRECT_STATE);
-    mAmbientContextTypeList[i] = chip::Platform::New<AmbientContextSensingCluster::AmbientContextSensed>();
-
-    VerifyOrReturnError(mAmbientContextTypeList[i] != nullptr, CHIP_ERROR_NO_MEMORY);
+    mAmbientContextTypeListUsed[i] = true;
     id = i;
+
     return CHIP_NO_ERROR;
 }
 
 AmbientContextSensingCluster::AmbientContextSensed * AmbientContextSensingDelegateImpl::GetDetection(const uint8_t id)
 {
     VerifyOrReturnError(id < kMaxSimultaneousDetectionLimit, nullptr);
-    return mAmbientContextTypeList[id];
+    VerifyOrReturnError(mAmbientContextTypeListUsed[id] == true, nullptr);
+    return &mAmbientContextTypeList[id];
 }
 
 CHIP_ERROR AmbientContextSensingDelegateImpl::DelDetection(const uint8_t & id)
 {
     VerifyOrReturnError(id < kMaxSimultaneousDetectionLimit, CHIP_ERROR_INVALID_ARGUMENT);
-    chip::Platform::Delete(mAmbientContextTypeList[id]);
-
-    mAmbientContextTypeList[id] = nullptr;
+    mAmbientContextTypeListUsed[id] = false;
 
     return CHIP_NO_ERROR;
 }

@@ -111,7 +111,6 @@ AmbientContextSensingType g_kACTDetectArray[] = {
 class TestACSDelegate : public AmbientContextSensingDelegate
 {
 public:
-    ~TestACSDelegate();
     CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) override;
     Span<SemanticTagType> & GetAmbientContextTypeSupported() override { return mAmbientContextTypeSupportedList; };
 
@@ -129,21 +128,9 @@ private:
     AmbientContextSensingCluster::PredictActivity mPredictActivityBuf[kMaxPredictedActivity] = {};
     Span<AmbientContextSensingCluster::PredictActivity> mPredictedActivityList;
 
-    AmbientContextSensingCluster::AmbientContextSensed * mAmbientContextTypeList[kMaxSimultaneousDetectionLimit] = {};
+    AmbientContextSensingCluster::AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit] = {};
+    bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit] = {};
 };
-
-TestACSDelegate::~TestACSDelegate()
-{
-    for (uint8_t id = 0; id < MATTER_ARRAY_SIZE(mAmbientContextTypeList); id++)
-    {
-        if (mAmbientContextTypeList[id] == nullptr)
-        {
-            continue;
-        }
-        chip::Platform::Delete(mAmbientContextTypeList[id]);
-        mAmbientContextTypeList[id] = nullptr;
-    }
-}
 
 CHIP_ERROR TestACSDelegate::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
 {
@@ -197,14 +184,13 @@ CHIP_ERROR TestACSDelegate::AddDetection(uint8_t & id)
 
     for (i = 0; i < kMaxSimultaneousDetectionLimit; i++)
     {
-        if (mAmbientContextTypeList[i] == nullptr)
+        if (mAmbientContextTypeListUsed[i] == false)
         {
             break;
         }
     }
     VerifyOrReturnError((i < kMaxSimultaneousDetectionLimit), CHIP_ERROR_INCORRECT_STATE);
-    mAmbientContextTypeList[i] = chip::Platform::New<AmbientContextSensingCluster::AmbientContextSensed>();
-    VerifyOrReturnError(mAmbientContextTypeList[i] != nullptr, CHIP_ERROR_NO_MEMORY);
+    mAmbientContextTypeListUsed[i] = true;
     id = i;
 
     return CHIP_NO_ERROR;
@@ -213,15 +199,14 @@ CHIP_ERROR TestACSDelegate::AddDetection(uint8_t & id)
 AmbientContextSensingCluster::AmbientContextSensed * TestACSDelegate::GetDetection(const uint8_t id)
 {
     VerifyOrReturnError(id < kMaxSimultaneousDetectionLimit, nullptr);
-    return mAmbientContextTypeList[id];
+    VerifyOrReturnError(mAmbientContextTypeListUsed[id] == true, nullptr);
+    return &mAmbientContextTypeList[id];
 }
 
 CHIP_ERROR TestACSDelegate::DelDetection(const uint8_t & id)
 {
     VerifyOrReturnError(id < kMaxSimultaneousDetectionLimit, CHIP_ERROR_INVALID_ARGUMENT);
-
-    chip::Platform::Delete(mAmbientContextTypeList[id]);
-    mAmbientContextTypeList[id] = nullptr;
+    mAmbientContextTypeListUsed[id] = false;
 
     return CHIP_NO_ERROR;
 }
@@ -436,9 +421,9 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimeAttribute)
                                                                                         .holdTimeDefault = 100 };
     AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(
         100, holdTimeLimitsConfig) };
-
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
     TestACSDelegate testACSDelegate;
+
     cluster.SetDelegate(&testACSDelegate);
     chip::Testing::ClusterTester tester(cluster);
 
