@@ -122,10 +122,10 @@ public:
     AmbientContextSensingCluster::AmbientContextSensed * GetDetection(const uint8_t id) override;
     CHIP_ERROR DelDetection(const uint8_t & id) override;
 
-    TestACSDelegate(const TestACSDelegate&)            = delete;
-    TestACSDelegate& operator=(const TestACSDelegate&) = delete;
-    TestACSDelegate(TestACSDelegate&&)                 = delete;
-    TestACSDelegate& operator=(TestACSDelegate&&)      = delete;
+    TestACSDelegate(const TestACSDelegate &)             = delete;
+    TestACSDelegate & operator=(const TestACSDelegate &) = delete;
+    TestACSDelegate(TestACSDelegate &&)                  = delete;
+    TestACSDelegate & operator=(TestACSDelegate &&)      = delete;
 
 private:
     SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported] = {};
@@ -139,11 +139,10 @@ private:
 };
 
 TestACSDelegate::TestACSDelegate() :
-      mAmbientContextTypeSupportedList(mAmbientContextTypeSupportedBuf),
-      mPredictedActivityList(mPredictActivityBuf)
+    mAmbientContextTypeSupportedList(mAmbientContextTypeSupportedBuf), mPredictedActivityList(mPredictActivityBuf)
 {
     mAmbientContextTypeSupportedList = Span<SemanticTagType>(mAmbientContextTypeSupportedBuf, 0);
-    mPredictedActivityList = Span<AmbientContextSensingCluster::PredictActivity>(mPredictActivityBuf, 0);
+    mPredictedActivityList           = Span<AmbientContextSensingCluster::PredictActivity>(mPredictActivityBuf, 0);
 }
 
 CHIP_ERROR TestACSDelegate::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)

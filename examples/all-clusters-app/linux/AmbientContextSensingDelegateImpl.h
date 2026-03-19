@@ -37,10 +37,10 @@ public:
     AmbientContextSensingCluster::AmbientContextSensed * GetDetection(const uint8_t id) override;
     CHIP_ERROR DelDetection(const uint8_t & id) override;
 
-    AmbientContextSensingDelegateImpl(const AmbientContextSensingDelegateImpl&)            = delete;
-    AmbientContextSensingDelegateImpl& operator=(const AmbientContextSensingDelegateImpl&) = delete;
-    AmbientContextSensingDelegateImpl(AmbientContextSensingDelegateImpl&&)                 = delete;
-    AmbientContextSensingDelegateImpl& operator=(AmbientContextSensingDelegateImpl&&)      = delete;
+    AmbientContextSensingDelegateImpl(const AmbientContextSensingDelegateImpl &)             = delete;
+    AmbientContextSensingDelegateImpl & operator=(const AmbientContextSensingDelegateImpl &) = delete;
+    AmbientContextSensingDelegateImpl(AmbientContextSensingDelegateImpl &&)                  = delete;
+    AmbientContextSensingDelegateImpl & operator=(AmbientContextSensingDelegateImpl &&)      = delete;
 
 private:
     SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported] = {};

@@ -22,15 +22,12 @@ using namespace chip;
 using namespace chip::app;
 using namespace chip::app::Clusters;
 
-
 AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl() :
-      mAmbientContextTypeSupportedList(mAmbientContextTypeSupportedBuf),
-      mPredictedActivityList(mPredictActivityBuf)
+    mAmbientContextTypeSupportedList(mAmbientContextTypeSupportedBuf), mPredictedActivityList(mPredictActivityBuf)
 {
     mAmbientContextTypeSupportedList = Span<SemanticTagType>(mAmbientContextTypeSupportedBuf, 0);
-    mPredictedActivityList = Span<AmbientContextSensingCluster::PredictActivity>(mPredictActivityBuf, 0);
+    mPredictedActivityList           = Span<AmbientContextSensingCluster::PredictActivity>(mPredictActivityBuf, 0);
 }
-
 
 CHIP_ERROR AmbientContextSensingDelegateImpl::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
 {
