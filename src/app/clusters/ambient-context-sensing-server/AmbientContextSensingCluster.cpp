@@ -289,7 +289,7 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::SetObjectCountConfig
                             Protocols::InteractionModel::Status::ConstraintError);
         bool inList           = false;
         auto ACSSupportedList = mACSDelegate->GetAmbientContextTypeSupported();
-        for (auto item : ACSSupportedList)
+        for (const auto & item : ACSSupportedList)
         {
             if (item.tag == newObjectCountConfig.countingObject.tag)
             {
@@ -829,7 +829,7 @@ CHIP_ERROR AmbientContextSensingCluster::CheckPredictedActivity(const Span<Predi
         {
             auto acsTypeList = item.ambientContextType.Value();
             VerifyOrReturnError(acsTypeList.size() <= kMaxPredictedACType, CHIP_ERROR_INCORRECT_STATE);
-            for (auto acsType : acsTypeList)
+            for (const auto & acsType : acsTypeList)
             {
                 switch (acsType.namespaceID)
                 {
