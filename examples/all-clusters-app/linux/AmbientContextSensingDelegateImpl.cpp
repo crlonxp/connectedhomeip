@@ -25,11 +25,14 @@ using namespace chip::app::Clusters;
 AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl() :
     mAmbientContextTypeSupportedList(mAmbientContextTypeSupportedBuf), mPredictedActivityList(mPredictActivityBuf)
 {
-    for (auto &v : mAmbientContextTypeSupportedBuf) v = SemanticTagType{};
+    for (auto & v : mAmbientContextTypeSupportedBuf)
+        v = SemanticTagType{};
     mAmbientContextTypeSupportedList = Span<SemanticTagType>(mAmbientContextTypeSupportedBuf, 0);
-    for (auto &v : mPredictActivityBuf) v = AmbientContextSensingCluster::PredictActivity{};
-    mPredictedActivityList           = Span<AmbientContextSensingCluster::PredictActivity>(mPredictActivityBuf, 0);
-    for (auto &v : mAmbientContextTypeListUsed) v = false;
+    for (auto & v : mPredictActivityBuf)
+        v = AmbientContextSensingCluster::PredictActivity{};
+    mPredictedActivityList = Span<AmbientContextSensingCluster::PredictActivity>(mPredictActivityBuf, 0);
+    for (auto & v : mAmbientContextTypeListUsed)
+        v = false;
 }
 
 CHIP_ERROR AmbientContextSensingDelegateImpl::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
