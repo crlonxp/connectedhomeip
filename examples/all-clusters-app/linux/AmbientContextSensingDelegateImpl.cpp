@@ -80,7 +80,7 @@ CHIP_ERROR AmbientContextSensingDelegateImpl::AddDetection(uint8_t & id)
     }
     VerifyOrReturnError((i < kMaxSimultaneousDetectionLimit), CHIP_ERROR_INCORRECT_STATE);
     mAmbientContextTypeListUsed[i] = true;
-    id = i;
+    id                             = i;
 
     return CHIP_NO_ERROR;
 }

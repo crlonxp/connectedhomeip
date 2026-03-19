@@ -45,7 +45,7 @@ private:
 
     // From spec, constraint of AmbientContextType is 1 to SimultaneousDetectionLimit.
     AmbientContextSensingCluster::AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit] = {};
-    bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit] = {};
+    bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit]                                           = {};
 };
 
 } // namespace Clusters

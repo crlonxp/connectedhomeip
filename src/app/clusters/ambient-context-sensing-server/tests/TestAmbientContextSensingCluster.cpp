@@ -129,7 +129,7 @@ private:
     Span<AmbientContextSensingCluster::PredictActivity> mPredictedActivityList;
 
     AmbientContextSensingCluster::AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit] = {};
-    bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit] = {};
+    bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit]                                           = {};
 };
 
 CHIP_ERROR TestACSDelegate::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
@@ -191,7 +191,7 @@ CHIP_ERROR TestACSDelegate::AddDetection(uint8_t & id)
     }
     VerifyOrReturnError((i < kMaxSimultaneousDetectionLimit), CHIP_ERROR_INCORRECT_STATE);
     mAmbientContextTypeListUsed[i] = true;
-    id = i;
+    id                             = i;
 
     return CHIP_NO_ERROR;
 }
