@@ -144,6 +144,8 @@ private:
 
     void SetBLE(bool ble) { mIsBLE = ble; }
 
+    void SetWiFiPAF(bool paf) { mIsWiFiPAF = paf; }
+
     CHIP_ERROR SetTemporaryDiscriminator(uint16_t discriminator);
 
     CHIP_ERROR RestoreDiscriminator();
@@ -207,6 +209,9 @@ private:
         app::Clusters::AdministratorCommissioning::CommissioningWindowStatusEnum::kWindowNotOpen;
 
     bool mIsBLE = true;
+
+    bool mIsWiFiPAF = false;
+    uint32_t mPublishId;
 
 #if CHIP_DEVICE_CONFIG_ENABLE_JOINT_FABRIC
     // Boolean that tracks whether we are currently in a Joint Commissioning Mode.
