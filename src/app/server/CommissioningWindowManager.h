@@ -211,7 +211,9 @@ private:
     bool mIsBLE = true;
 
     bool mIsWiFiPAF = false;
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
     uint32_t mPublishId;
+#endif
 
 #if CHIP_DEVICE_CONFIG_ENABLE_JOINT_FABRIC
     // Boolean that tracks whether we are currently in a Joint Commissioning Mode.

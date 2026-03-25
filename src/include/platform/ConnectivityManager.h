@@ -455,6 +455,7 @@ inline void ConnectivityManager::WiFiPAFSetParam(const WiFiPAFAdvertiseParam & p
     mPafAdvParam.freq_list     = std::make_unique<uint16_t[]>(mPafAdvParam.freq_list_len);
     for (size_t i = 0; i < mPafAdvParam.freq_list_len; i++)
         mPafAdvParam.freq_list[i] = pafAdvParam.freq_list[i];
+    mPafAdvParam.publish_id = WiFiPAF::kUndefinedWiFiPafSessionId;
 }
 
 inline CHIP_ERROR ConnectivityManager::SetWiFiPAFAdvertisingEnabled(bool val, uint32_t & publishId)
@@ -463,9 +464,13 @@ inline CHIP_ERROR ConnectivityManager::SetWiFiPAFAdvertisingEnabled(bool val, ui
     {
         VerifyOrReturnError(mPafAdvParam.freq_list_len > 0, CHIP_ERROR_INVALID_ARGUMENT);
         auto res = WiFiPAFPublish(mPafAdvParam);
-        if ((res == CHIP_NO_ERROR) && (mPafAdvParam.publish_id != UINT32_MAX))
+        if ((res == CHIP_NO_ERROR) && (mPafAdvParam.publish_id != WiFiPAF::kUndefinedWiFiPafSessionId))
         {
             publishId = mPafAdvParam.publish_id;
+        }
+        else
+        {
+            publishId = WiFiPAF::kUndefinedWiFiPafSessionId;
         }
         return res;
     }

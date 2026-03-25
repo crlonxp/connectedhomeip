@@ -77,7 +77,7 @@ void CommissioningWindowManager::OnPlatformEvent(const DeviceLayer::ChipDeviceEv
         mServer->GetBleLayerObject()->CloseAllBleConnections();
 #endif
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
-        chip::WiFiPAF::WiFiPAFLayer::GetWiFiPAFLayer().Shutdown(nullptr);
+        chip::WiFiPAF::WiFiPAFLayer::GetWiFiPAFLayer().Shutdown();
         mPublishId = WiFiPAF::kUndefinedWiFiPafSessionId;
 #endif
     }

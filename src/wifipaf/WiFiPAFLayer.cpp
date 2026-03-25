@@ -240,7 +240,7 @@ CHIP_ERROR WiFiPAFLayer::Init(chip::System::Layer * systemLayer)
     return CHIP_NO_ERROR;
 }
 
-void WiFiPAFLayer::Shutdown(OnCancelDeviceHandle OnCancelDevice)
+void WiFiPAFLayer::Shutdown()
 {
     uint8_t i;
     WiFiPAFSession * pPafSession;
@@ -255,8 +255,6 @@ void WiFiPAFLayer::Shutdown(OnCancelDeviceHandle OnCancelDevice)
         }
         ChipLogProgress(WiFiPAF, "WiFiPAF: Canceling id: %u", pPafSession->id);
         WiFiPAFEndPoint * endPoint = sWiFiPAFEndPointPool.Find(reinterpret_cast<WIFIPAF_CONNECTION_OBJECT>(pPafSession));
-        if (OnCancelDevice != nullptr)
-            OnCancelDevice(pPafSession->id, pPafSession->role);
         if (endPoint != nullptr)
         {
             endPoint->DoClose(kWiFiPAFCloseFlag_AbortTransmission, WIFIPAF_ERROR_APP_CLOSED_CONNECTION);
