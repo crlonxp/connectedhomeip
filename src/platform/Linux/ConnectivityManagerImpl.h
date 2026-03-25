@@ -145,6 +145,8 @@ public:
                                               NetworkCommissioning::Internal::WirelessDriver::ConnectCallback * connectCallback);
 #endif // CHIP_DEVICE_CONFIG_ENABLE_WIFI_PDC
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
+    void _WiFiPAFSetParam(const WiFiPAFAdvertiseParam & pafAdvParam);
+    CHIP_ERROR _SetWiFiPAFAdvertisingEnabled(bool val, uint32_t & publishId);
     CHIP_ERROR _WiFiPAFSubscribe(const uint16_t & connDiscriminator, void * appState, OnConnectionCompleteFunct onSuccess,
                                  OnConnectionErrorFunct onError);
     CHIP_ERROR _WiFiPAFCancelSubscribe(uint32_t SubscribeId);
@@ -239,6 +241,7 @@ private:
     void _OnWpaInterfaceProxyReady(GObject * sourceObject, GAsyncResult * res);
     CHIP_ERROR StartWiFiManagementSync();
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
+    WiFiPAFAdvertiseParam mPafAdvParam;
     OnConnectionCompleteFunct mOnPafSubscribeComplete;
     OnConnectionErrorFunct mOnPafSubscribeError;
     WiFiPAF::WiFiPAFEndPoint mWiFiPAFEndPoint;

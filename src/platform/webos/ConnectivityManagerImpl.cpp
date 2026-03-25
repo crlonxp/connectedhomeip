@@ -1486,6 +1486,31 @@ void ConnectivityManagerImpl::OnNanSubscribeTerminated(guint subscribe_id, gchar
     PlatformMgr().PostEventOrDie(&event);
 }
 
+void ConnectivityManagerImpl::_WiFiPAFSetParam(const WiFiPAFAdvertiseParam & pafAdvParam)
+{
+    mPafAdvParam.freq_list_len = pafAdvParam.freq_list_len;
+    mPafAdvParam.freq_list = std::make_unique<uint16_t[]>(mPafAdvParam.freq_list_len);
+    for (size_t i=0 ; i<mPafAdvParam.freq_list_len ; i++)
+       mPafAdvParam.freq_list[i] = pafAdvParam.freq_list[i];
+}
+
+CHIP_ERROR ConnectivityManagerImpl::_SetWiFiPAFAdvertisingEnabled(bool val, uint32_t & publishId)
+{
+    if (val)
+    {
+        VerifyOrReturnError(mPafAdvParam.freq_list_len > 0, CHIP_ERROR_INVALID_ARGUMENT);
+        auto res = WiFiPAFPublish(mPafAdvParam);
+        if ((res == CHIP_NO_ERROR) && (mPafAdvParam.publish_id != UINT32_MAX))
+        {
+            publishId = mPafAdvParam.publish_id;
+        }
+        return res;
+    }
+    // Cancel paf_publish, publish_id should be valid
+    VerifyOrReturnError(publishId != WiFiPAF::kUndefinedWiFiPafSessionId, CHIP_ERROR_INVALID_ARGUMENT);
+    return WiFiPAFCancelPublish(publishId);
+}
+
 CHIP_ERROR ConnectivityManagerImpl::_WiFiPAFSubscribe(const uint16_t & connDiscriminator, void * appState,
                                                       OnConnectionCompleteFunct onSuccess, OnConnectionErrorFunct onError)
 {

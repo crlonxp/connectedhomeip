@@ -162,16 +162,6 @@ public:
     };
 
     struct SEDIntervalsConfig;
-#if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
-    struct WiFiPAFAdvertiseParam
-    {
-        /* Frequency list */
-        uint16_t freq_list_len = 0;
-        std::unique_ptr<uint16_t[]> freq_list;
-        /* Returned publish id */
-        uint32_t publish_id;
-    };
-#endif
 
     void SetDelegate(ConnectivityManagerDelegate * delegate) { mDelegate = delegate; }
     ConnectivityManagerDelegate * GetDelegate() const { return mDelegate; }
@@ -194,7 +184,7 @@ public:
     void ClearWiFiStationProvision();
     CHIP_ERROR GetAndLogWiFiStatsCounters();
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
-    WiFiPAFAdvertiseParam mPafAdvParam;
+    struct WiFiPAFAdvertiseParam;
     void WiFiPAFSetParam(const WiFiPAFAdvertiseParam & pafAdvParam);
     CHIP_ERROR SetWiFiPAFAdvertisingEnabled(bool val, uint32_t & publishId);
     CHIP_ERROR WiFiPAFPublish(WiFiPAFAdvertiseParam & args);
@@ -308,6 +298,16 @@ struct ConnectivityManager::SEDIntervalsConfig
      * Only meaningful when the device is acting as a sleepy end node. */
     System::Clock::Milliseconds32 IdleIntervalMS;
 };
+
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
+struct ConnectivityManager::WiFiPAFAdvertiseParam
+{
+    /* Frequency list */
+    uint16_t freq_list_len=0;
+    std::unique_ptr<uint16_t[]> freq_list;
+    uint32_t publish_id;
+};
+#endif
 
 /**
  * Returns a reference to the public interface of the ConnectivityManager singleton object.
@@ -451,32 +451,12 @@ inline CHIP_ERROR ConnectivityManager::GetAndLogWiFiStatsCounters()
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
 inline void ConnectivityManager::WiFiPAFSetParam(const WiFiPAFAdvertiseParam & pafAdvParam)
 {
-    mPafAdvParam.freq_list_len = pafAdvParam.freq_list_len;
-    mPafAdvParam.freq_list     = std::make_unique<uint16_t[]>(mPafAdvParam.freq_list_len);
-    for (size_t i = 0; i < mPafAdvParam.freq_list_len; i++)
-        mPafAdvParam.freq_list[i] = pafAdvParam.freq_list[i];
-    mPafAdvParam.publish_id = WiFiPAF::kUndefinedWiFiPafSessionId;
+    return static_cast<ImplClass *>(this)->_WiFiPAFSetParam(pafAdvParam);
 }
 
 inline CHIP_ERROR ConnectivityManager::SetWiFiPAFAdvertisingEnabled(bool val, uint32_t & publishId)
 {
-    if (val)
-    {
-        VerifyOrReturnError(mPafAdvParam.freq_list_len > 0, CHIP_ERROR_INVALID_ARGUMENT);
-        auto res = WiFiPAFPublish(mPafAdvParam);
-        if ((res == CHIP_NO_ERROR) && (mPafAdvParam.publish_id != WiFiPAF::kUndefinedWiFiPafSessionId))
-        {
-            publishId = mPafAdvParam.publish_id;
-        }
-        else
-        {
-            publishId = WiFiPAF::kUndefinedWiFiPafSessionId;
-        }
-        return res;
-    }
-    // Cancel paf_publish, publish_id should be valid
-    VerifyOrReturnError(publishId != WiFiPAF::kUndefinedWiFiPafSessionId, CHIP_ERROR_INVALID_ARGUMENT);
-    return WiFiPAFCancelPublish(publishId);
+    return static_cast<ImplClass *>(this)->_SetWiFiPAFAdvertisingEnabled(val, publishId);
 }
 
 inline CHIP_ERROR ConnectivityManager::WiFiPAFPublish(WiFiPAFAdvertiseParam & args)
