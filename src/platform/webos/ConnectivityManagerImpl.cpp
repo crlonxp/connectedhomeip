@@ -1489,9 +1489,9 @@ void ConnectivityManagerImpl::OnNanSubscribeTerminated(guint subscribe_id, gchar
 void ConnectivityManagerImpl::_WiFiPAFSetParam(const WiFiPAFAdvertiseParam & pafAdvParam)
 {
     mPafAdvParam.freq_list_len = pafAdvParam.freq_list_len;
-    mPafAdvParam.freq_list = std::make_unique<uint16_t[]>(mPafAdvParam.freq_list_len);
-    for (size_t i=0 ; i<mPafAdvParam.freq_list_len ; i++)
-       mPafAdvParam.freq_list[i] = pafAdvParam.freq_list[i];
+    mPafAdvParam.freq_list     = std::make_unique<uint16_t[]>(mPafAdvParam.freq_list_len);
+    for (size_t i = 0; i < mPafAdvParam.freq_list_len; i++)
+        mPafAdvParam.freq_list[i] = pafAdvParam.freq_list[i];
 }
 
 CHIP_ERROR ConnectivityManagerImpl::_SetWiFiPAFAdvertisingEnabled(bool val, uint32_t & publishId)

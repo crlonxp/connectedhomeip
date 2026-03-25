@@ -303,7 +303,7 @@ struct ConnectivityManager::SEDIntervalsConfig
 struct ConnectivityManager::WiFiPAFAdvertiseParam
 {
     /* Frequency list */
-    uint16_t freq_list_len=0;
+    uint16_t freq_list_len = 0;
     std::unique_ptr<uint16_t[]> freq_list;
     uint32_t publish_id;
 };
