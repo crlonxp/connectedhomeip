@@ -134,8 +134,7 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::WriteAttribute(const
         uint16_t newHoldTime;
         ReturnErrorOnFailure(decoder.Decode(newHoldTime));
         VerifyOrReturnError((newHoldTime != mHoldTime), DataModel::ActionReturnStatus::FixedStatus::kWriteSuccessNoOp);
-        ReturnErrorOnFailure(SetHoldTime(newHoldTime));
-        return Protocols::InteractionModel::Status::Success;
+        return SetHoldTime(newHoldTime);
     }
     default:
         return Protocols::InteractionModel::Status::UnsupportedWrite;
