@@ -108,9 +108,8 @@ AmbientContextSensingType g_kACTDetectArray[] = {
     },
 };
 
-constexpr uint8_t kMaxACTypeSupported_test = 10;
+constexpr uint8_t kMaxACTypeSupported_test   = 10;
 constexpr uint8_t kMaxPredictedActivity_test = 3;
-
 
 class TestACSDelegate : public AmbientContextSensingDelegate
 {
