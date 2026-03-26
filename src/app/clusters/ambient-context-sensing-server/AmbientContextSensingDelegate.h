@@ -93,4 +93,3 @@ public:
 };
 
 } // namespace chip::app::Clusters::AmbientContextSensing
-
