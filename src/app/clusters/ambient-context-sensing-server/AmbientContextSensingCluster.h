@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ambient-context-sensing-namespace.h"
+#include "AmbientContextSensingDelegate.h"
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app/server-cluster/DefaultServerCluster.h>
 #include <app/server-cluster/ServerClusterContext.h>
@@ -25,27 +26,8 @@
 #include <platform/DefaultTimerDelegate.h>
 
 namespace chip::app::Clusters {
-// Default value for implementation sake. They should be set by device vendor
-constexpr uint8_t kDefaultSimultaneousDetectionLimit = 5;
-constexpr uint16_t kDefaultCountThreshold            = 5;
-constexpr uint16_t kDefaultHoldTimeMin               = 10;
-constexpr uint16_t kDefaultHoldTimeMax               = 300;
-constexpr uint16_t kDefaultHoldTimeDefault           = 50;
 
-// Default value in spec
-constexpr uint8_t kMaxACSensed                   = 2;
-constexpr uint8_t kMaxACTypeSupported            = 50;
-constexpr uint8_t kMaxSimultaneousDetectionLimit = 10;
-constexpr uint16_t kMinObjectCount               = 1;
-constexpr uint8_t kMaxPredictedACType            = 100;
-constexpr uint8_t kMaxPredictedActivity          = 20;
-
-using SemanticTagType           = Globals::Structs::SemanticTagStruct::Type;
-using AmbientContextSensingType = AmbientContextSensing::Structs::AmbientContextTypeStruct::Type;
-using ObjectCountConfigType     = AmbientContextSensing::Structs::ObjectCountConfigStruct::Type;
-using PredictedActivityType     = AmbientContextSensing::Structs::PredictedActivityStruct::Type;
-
-class AmbientContextSensingDelegate;
+using namespace chip::app::Clusters::AmbientContextSensing;
 
 class AmbientContextSensingCluster : public DefaultServerCluster, public TimerContext
 {
@@ -82,21 +64,6 @@ public:
                                                                                        .holdTimeMax     = kDefaultHoldTimeMax,
                                                                                        .holdTimeDefault = kDefaultHoldTimeDefault };
         TimerDelegate & mHoldTimeDelegate;
-    };
-
-    struct AmbientContextSensed : public IntrusiveListNodeBase<>
-    {
-        AmbientContextSensingType mInfo;
-        SemanticTagType mOwnedTags[kMaxACSensed];
-        System::Clock::Timestamp mStartTimestamp = System::Clock::Milliseconds64(0);
-        System::Clock::Timestamp mEndTimestamp;
-        uint8_t id;
-    };
-
-    struct PredictActivity
-    {
-        PredictedActivityType mInfo;
-        std::unique_ptr<SemanticTagType[]> mOwnedTags;
     };
 
     AmbientContextSensingCluster(const Config & config);
@@ -168,21 +135,6 @@ private:
                                                                                    .holdTimeMax     = kDefaultHoldTimeMax,
                                                                                    .holdTimeDefault = kDefaultHoldTimeDefault };
     TimerDelegate & mHoldTimeDelegate;
-};
-
-class AmbientContextSensingDelegate
-{
-public:
-    virtual ~AmbientContextSensingDelegate()                                                    = default;
-    virtual CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) = 0;
-    virtual Span<SemanticTagType> & GetAmbientContextTypeSupported()                            = 0;
-
-    virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList) = 0;
-    virtual Span<AmbientContextSensingCluster::PredictActivity> & GetPredictedActivity()               = 0;
-
-    virtual CHIP_ERROR AddDetection(uint8_t & id)                                               = 0;
-    virtual AmbientContextSensingCluster::AmbientContextSensed * GetDetection(const uint8_t id) = 0;
-    virtual CHIP_ERROR DelDetection(const uint8_t & id)                                         = 0;
 };
 
 } // namespace chip::app::Clusters

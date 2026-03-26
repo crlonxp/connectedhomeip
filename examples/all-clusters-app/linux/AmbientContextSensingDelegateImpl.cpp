@@ -29,8 +29,8 @@ AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl() :
         v = SemanticTagType{};
     mAmbientContextTypeSupportedList = Span<SemanticTagType>(mAmbientContextTypeSupportedBuf, 0);
     for (auto & v : mPredictActivityBuf)
-        v = AmbientContextSensingCluster::PredictActivity{};
-    mPredictedActivityList = Span<AmbientContextSensingCluster::PredictActivity>(mPredictActivityBuf, 0);
+        v = PredictActivity{};
+    mPredictedActivityList = Span<PredictActivity>(mPredictActivityBuf, 0);
     for (auto & v : mAmbientContextTypeListUsed)
         v = false;
 }
@@ -54,34 +54,26 @@ CHIP_ERROR AmbientContextSensingDelegateImpl::SetPredictedActivity(const Span<Pr
         const auto & src = predictedActivityList[i];
         auto & dst       = mPredictActivityBuf[i];
         dst.mInfo        = src;
-        // Copy tags
-        if (!src.ambientContextType.HasValue())
-        {
-            dst.mOwnedTags.reset();
-            dst.mInfo.ambientContextType.ClearValue();
-            continue;
-        }
 
+        // Copy tags
         const auto & acTypeList = src.ambientContextType.Value();
         const auto tagCount     = acTypeList.size();
         VerifyOrReturnError(tagCount > 0, CHIP_ERROR_INVALID_ARGUMENT);
         VerifyOrReturnError(tagCount <= kMaxPredictedACType, CHIP_ERROR_INVALID_ARGUMENT);
-
-        dst.mOwnedTags = std::make_unique<SemanticTagType[]>(tagCount);
         for (size_t t = 0; t < tagCount; t++)
         {
             dst.mOwnedTags[t] = acTypeList[t];
         }
 
         dst.mInfo.ambientContextType.SetValue(
-            DataModel::List<const SemanticTagType>(dst.mOwnedTags.get(), static_cast<uint16_t>(tagCount)));
+            DataModel::List<const SemanticTagType>(dst.mOwnedTags, static_cast<uint16_t>(tagCount)));
     }
-    mPredictedActivityList = Span<AmbientContextSensingCluster::PredictActivity>(mPredictActivityBuf, predictedActivityList.size());
+    mPredictedActivityList = Span<PredictActivity>(mPredictActivityBuf, predictedActivityList.size());
 
     return CHIP_NO_ERROR;
 }
 
-CHIP_ERROR AmbientContextSensingDelegateImpl::AddDetection(uint8_t & id)
+DetectFuncResult AmbientContextSensingDelegateImpl::FindAndUseAvailableDetection()
 {
     uint8_t i;
     for (i = 0; i < kMaxSimultaneousDetectionLimit; i++)
@@ -91,14 +83,17 @@ CHIP_ERROR AmbientContextSensingDelegateImpl::AddDetection(uint8_t & id)
             break;
         }
     }
-    VerifyOrReturnError((i < kMaxSimultaneousDetectionLimit), CHIP_ERROR_INCORRECT_STATE);
+    if (i >= kMaxSimultaneousDetectionLimit)
+    {
+        // Can't find the available space
+        return {.res = CHIP_ERROR_INCORRECT_STATE};
+    }
     mAmbientContextTypeListUsed[i] = true;
-    id                             = i;
 
-    return CHIP_NO_ERROR;
+    return { .res = CHIP_NO_ERROR, .id = i};
 }
 
-AmbientContextSensingCluster::AmbientContextSensed * AmbientContextSensingDelegateImpl::GetDetection(const uint8_t id)
+AmbientContextSensed * AmbientContextSensingDelegateImpl::GetAllocedDetection(const uint8_t id)
 {
     VerifyOrReturnError(id < kMaxSimultaneousDetectionLimit, nullptr);
     VerifyOrReturnError(mAmbientContextTypeListUsed[id] == true, nullptr);

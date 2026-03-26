@@ -19,6 +19,8 @@ source_set("ambient-context-sensing-server") {
   sources = [
     "AmbientContextSensingCluster.cpp",
     "AmbientContextSensingCluster.h",
+    "AmbientContextSensingDelegate.h",
+    "ambient-context-sensing-namespace.h",
   ]
   public_deps = [
     "${chip_root}/src/app/data-model-provider",

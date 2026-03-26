@@ -133,7 +133,7 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::WriteAttribute(const
     case HoldTime::Id: {
         uint16_t newHoldTime;
         ReturnErrorOnFailure(decoder.Decode(newHoldTime));
-        VerifyOrReturnError((newHoldTime != mHoldTime), DataModel::ActionReturnStatus::FixedStatus::kWriteSuccessNoOp);
+        VerifyOrReturnError((newHoldTime != mHoldTime), Protocols::InteractionModel::Status::Success);
         return SetHoldTime(newHoldTime);
     }
     default:
@@ -224,10 +224,11 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
     if (!fromExisting)
     {
         // The new detection event
-        uint8_t id;
-        ReturnErrorOnFailure(mACSDelegate->AddDetection(id));
-        item              = mACSDelegate->GetDetection(id);
-        item->id          = id;
+        DetectFuncResult res = mACSDelegate->FindAndUseAvailableDetection();
+        ReturnErrorOnFailure(res.res);
+
+        item              = mACSDelegate->GetAllocedDetection(res.id);
+        item->id          = res.id;
         const auto & tags = sensedEvent.ambientContextSensed;
         const auto tagCount = tags.size();
         for (size_t t = 0; t < tagCount; t++)

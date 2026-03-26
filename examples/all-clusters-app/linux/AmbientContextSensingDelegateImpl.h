@@ -17,11 +17,13 @@
 
 #pragma once
 
-#include <app/clusters/ambient-context-sensing-server/AmbientContextSensingCluster.h>
+#include <app/clusters/ambient-context-sensing-server/AmbientContextSensingDelegate.h>
 
 namespace chip {
 namespace app {
 namespace Clusters {
+
+using namespace chip::app::Clusters::AmbientContextSensing;
 
 class AmbientContextSensingDelegateImpl : public AmbientContextSensingDelegate
 {
@@ -32,10 +34,10 @@ public:
     Span<SemanticTagType> & GetAmbientContextTypeSupported() override { return mAmbientContextTypeSupportedList; };
 
     CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList) override;
-    Span<AmbientContextSensingCluster::PredictActivity> & GetPredictedActivity() override { return mPredictedActivityList; };
+    Span<PredictActivity> & GetPredictedActivity() override { return mPredictedActivityList; };
 
-    CHIP_ERROR AddDetection(uint8_t & id) override;
-    AmbientContextSensingCluster::AmbientContextSensed * GetDetection(const uint8_t id) override;
+    DetectFuncResult FindAndUseAvailableDetection() override;
+    AmbientContextSensed * GetAllocedDetection(const uint8_t id) override;
     CHIP_ERROR DelDetection(const uint8_t & id) override;
 
     AmbientContextSensingDelegateImpl(const AmbientContextSensingDelegateImpl &)             = delete;
@@ -47,11 +49,11 @@ private:
     SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported];
     Span<SemanticTagType> mAmbientContextTypeSupportedList;
 
-    AmbientContextSensingCluster::PredictActivity mPredictActivityBuf[kMaxPredictedActivity];
-    Span<AmbientContextSensingCluster::PredictActivity> mPredictedActivityList;
+    PredictActivity mPredictActivityBuf[kMaxPredictedActivity];
+    Span<PredictActivity> mPredictedActivityList;
 
     // From spec, constraint of AmbientContextType is 1 to SimultaneousDetectionLimit.
-    AmbientContextSensingCluster::AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit];
+    AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit];
     bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit];
 };
 
