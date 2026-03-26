@@ -229,7 +229,6 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
         item              = mACSDelegate->GetDetection(id);
         item->id          = id;
         const auto & tags = sensedEvent.ambientContextSensed;
-        // item.mOwnedTags.assign(tags.begin(), tags.end());
         const auto tagCount = tags.size();
         for (size_t t = 0; t < tagCount; t++)
         {
