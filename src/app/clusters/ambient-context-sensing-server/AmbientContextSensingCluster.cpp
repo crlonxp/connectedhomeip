@@ -173,9 +173,7 @@ CHIP_ERROR AmbientContextSensingCluster::SetAmbientContextTypeSupported(const Sp
     ReturnErrorOnFailure(CheckInputSupportedType(ACTypeList));
     VerifyOrReturnError(mACSDelegate != nullptr, CHIP_ERROR_INCORRECT_STATE);
 
-    ReturnErrorOnFailure(mACSDelegate->SetAmbientContextTypeSupported(ACTypeList));
-
-    return CHIP_NO_ERROR;
+    return mACSDelegate->SetAmbientContextTypeSupported(ACTypeList);
 }
 
 CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensingType & sensedEvent)
