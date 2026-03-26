@@ -205,11 +205,11 @@ DetectFuncResult TestACSDelegate::FindAndUseAvailableDetection()
     if (i >= kMaxSimultaneousDetectionLimit)
     {
         // Can't find the available space
-        return {.res = CHIP_ERROR_INCORRECT_STATE};
+        return { .res = CHIP_ERROR_INCORRECT_STATE };
     }
     mAmbientContextTypeListUsed[i] = true;
 
-    return { .res = CHIP_NO_ERROR, .id = i};
+    return { .res = CHIP_NO_ERROR, .id = i };
 }
 
 AmbientContextSensed * TestACSDelegate::GetAllocedDetection(const uint8_t id)

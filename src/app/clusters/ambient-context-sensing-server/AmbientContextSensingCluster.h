@@ -16,8 +16,8 @@
  */
 #pragma once
 
-#include "ambient-context-sensing-namespace.h"
 #include "AmbientContextSensingDelegate.h"
+#include "ambient-context-sensing-namespace.h"
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app/server-cluster/DefaultServerCluster.h>
 #include <app/server-cluster/ServerClusterContext.h>

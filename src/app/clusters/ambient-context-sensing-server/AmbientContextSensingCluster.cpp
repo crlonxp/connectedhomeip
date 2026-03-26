@@ -227,9 +227,9 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
         DetectFuncResult res = mACSDelegate->FindAndUseAvailableDetection();
         ReturnErrorOnFailure(res.res);
 
-        item              = mACSDelegate->GetAllocedDetection(res.id);
-        item->id          = res.id;
-        const auto & tags = sensedEvent.ambientContextSensed;
+        item                = mACSDelegate->GetAllocedDetection(res.id);
+        item->id            = res.id;
+        const auto & tags   = sensedEvent.ambientContextSensed;
         const auto tagCount = tags.size();
         for (size_t t = 0; t < tagCount; t++)
         {
