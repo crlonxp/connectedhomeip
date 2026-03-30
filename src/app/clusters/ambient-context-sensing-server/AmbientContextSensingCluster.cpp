@@ -28,6 +28,7 @@ using namespace AmbientContextSensing::Attributes;
 
 AmbientContextSensingCluster::AmbientContextSensingCluster(const Config & config) :
     DefaultServerCluster({ config.mEndpointId, AmbientContextSensing::Id }), mFeatureMap(config.mFeatureMap),
+    mOptionalAttributeSet(config.mOptionalAttributeBits),
     mHoldTimeDelegate(config.mHoldTimeDelegate)
 {
     SetHoldTimeLimits(config.mHoldTimeLimits);
@@ -145,6 +146,7 @@ CHIP_ERROR AmbientContextSensingCluster::Attributes(const ConcreteClusterPath & 
                                                     ReadOnlyBufferBuilder<DataModel::AttributeEntry> & builder)
 {
     AttributeListBuilder listBuilder(builder);
+
     const AttributeListBuilder::OptionalAttributeEntry optionalAttributes[] = {
         { mFeatureMap.Has(Feature::kHumanActivity), Attributes::HumanActivityDetected::kMetadataEntry },
         { mFeatureMap.Has(Feature::kObjectIdentification), Attributes::ObjectIdentified::kMetadataEntry },
@@ -159,7 +161,7 @@ CHIP_ERROR AmbientContextSensingCluster::Attributes(const ConcreteClusterPath & 
           Attributes::ObjectCountReached::kMetadataEntry },
         { mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification),
           Attributes::ObjectCountConfig::kMetadataEntry },
-        { mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification) && mObjectCountReached,
+        { mOptionalAttributeSet.IsSet(ObjectCount::Id) && (mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification)),
           Attributes::ObjectCount::kMetadataEntry },
         { mFeatureMap.Has(Feature::kPredictedActivity), Attributes::PredictedActivity::kMetadataEntry },
     };

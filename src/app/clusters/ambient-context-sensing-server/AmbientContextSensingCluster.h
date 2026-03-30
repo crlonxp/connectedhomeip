@@ -21,6 +21,7 @@
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app/server-cluster/DefaultServerCluster.h>
 #include <app/server-cluster/ServerClusterContext.h>
+#include <app/server-cluster/OptionalAttributeSet.h>
 #include <lib/support/IntrusiveList.h>
 #include <lib/support/Span.h>
 #include <platform/DefaultTimerDelegate.h>
@@ -42,6 +43,12 @@ public:
             return *this;
         }
 
+        Config & WithOptionalAttributes(uint32_t bits)
+        {
+            mOptionalAttributeBits = bits;
+            return *this;
+        }
+
         Config & WithHoldTime(uint16_t aHoldTime,
                               const AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type & aHoldTimeLimits)
         {
@@ -52,6 +59,7 @@ public:
 
         EndpointId mEndpointId;
         BitMask<AmbientContextSensing::Feature> mFeatureMap = 0;
+        uint32_t mOptionalAttributeBits                     = 0;
         ObjectCountConfigType mObjectCountConfig            = {
             .countingObject  = {
                 .namespaceID = kNamespaceIdentifiedObject,
@@ -65,6 +73,8 @@ public:
                                                                                        .holdTimeDefault = kDefaultHoldTimeDefault };
         TimerDelegate & mHoldTimeDelegate;
     };
+
+    using OptionalAttributeSet = chip::app::OptionalAttributeSet<Attributes::ObjectCount::Id>;
 
     AmbientContextSensingCluster(const Config & config);
     ~AmbientContextSensingCluster();
@@ -110,6 +120,7 @@ private:
     CHIP_ERROR ReadPredictedActivity(AttributeValueEncoder & encoder);
 
     const BitMask<AmbientContextSensing::Feature> mFeatureMap;
+    const OptionalAttributeSet mOptionalAttributeSet;
     bool mHumanActivityDetected                  = false;
     bool mObjectIdentified                       = false;
     bool mAudioContextDetected                   = false;

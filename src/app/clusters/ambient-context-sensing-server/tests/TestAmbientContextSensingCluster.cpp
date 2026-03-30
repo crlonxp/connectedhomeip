@@ -713,6 +713,7 @@ TEST_F(TestAmbientContextSensingCluster, TestObjectCount)
     };
     AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
                                               .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all))
+                                              .WithOptionalAttributes(0xfff)
                                               .WithHoldTime(kDefaultHoldTimeDefault, holdTimeLimitsConfig) };
     static TestACSDelegate testACSDelegate;
     cluster.SetDelegate(&testACSDelegate);
@@ -747,10 +748,6 @@ TEST_F(TestAmbientContextSensingCluster, TestObjectCount)
               Protocols::InteractionModel::Status::Success);
     EXPECT_FALSE(objCntReached);
 
-    // Read ObjectCount attribute, exp: unsupported_attribute
-    EXPECT_EQ(tester.ReadAttribute(Attributes::ObjectCount::Id, objCount),
-              Protocols::InteractionModel::Status::UnsupportedAttribute);
-
     // Set ObjectCount attribute which is smaller than ObjectCountThreshold
     EXPECT_EQ(cluster.SetObjectCount(kMinObjectCount), CHIP_NO_ERROR);
 
@@ -758,10 +755,6 @@ TEST_F(TestAmbientContextSensingCluster, TestObjectCount)
     EXPECT_EQ(tester.ReadAttribute(Attributes::ObjectCountReached::Id, objCntReached),
               Protocols::InteractionModel::Status::Success);
     EXPECT_FALSE(objCntReached);
-
-    // Read ObjectCount attribute, exp: unsupported_attribute
-    EXPECT_EQ(tester.ReadAttribute(Attributes::ObjectCount::Id, objCount),
-              Protocols::InteractionModel::Status::UnsupportedAttribute);
 
     // Set ObjectCount attribute which is bigger than ObjectCountThreshold
     EXPECT_EQ(cluster.SetObjectCount(kTestObjectCount), CHIP_NO_ERROR);
@@ -784,9 +777,9 @@ TEST_F(TestAmbientContextSensingCluster, TestObjectCount)
               Protocols::InteractionModel::Status::Success);
     EXPECT_FALSE(objCntReached);
 
-    // Read ObjectCount attribute, exp: unsupported_attribute
-    EXPECT_EQ(tester.ReadAttribute(Attributes::ObjectCount::Id, objCount),
-              Protocols::InteractionModel::Status::UnsupportedAttribute);
+    // Read ObjectCount attribute, exp: ObjectCount is resetted to 0
+    EXPECT_EQ(tester.ReadAttribute(Attributes::ObjectCount::Id, objCount), Protocols::InteractionModel::Status::Success);
+    EXPECT_EQ(objCount, 0);
 
     cluster.SetDelegate(nullptr);
     cluster.Shutdown(ClusterShutdownType::kClusterShutdown);

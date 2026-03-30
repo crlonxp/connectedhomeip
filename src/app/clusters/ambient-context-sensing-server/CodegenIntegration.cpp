@@ -48,6 +48,7 @@ public:
     {
         AmbientContextSensingCluster::Config config(endpointId, gDefaultTimerDelegate);
         config.WithFeatures(static_cast<Feature>(featureMap));
+        config.WithOptionalAttributes(optionalAttributeBits);
         constexpr chip::app::Clusters::AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type kDefaultHoldTimeLimits = {
             .holdTimeMin = kDefaultHoldTimeMin, .holdTimeMax = kDefaultHoldTimeMax, .holdTimeDefault = kDefaultHoldTimeDefault
         };
