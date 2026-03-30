@@ -28,8 +28,7 @@ using namespace AmbientContextSensing::Attributes;
 
 AmbientContextSensingCluster::AmbientContextSensingCluster(const Config & config) :
     DefaultServerCluster({ config.mEndpointId, AmbientContextSensing::Id }), mFeatureMap(config.mFeatureMap),
-    mOptionalAttributeSet(config.mOptionalAttributeBits),
-    mHoldTimeDelegate(config.mHoldTimeDelegate)
+    mOptionalAttributeSet(config.mOptionalAttributeBits), mHoldTimeDelegate(config.mHoldTimeDelegate)
 {
     SetHoldTimeLimits(config.mHoldTimeLimits);
     mHoldTime = std::clamp(config.mHoldTime, mHoldTimeLimits.holdTimeMin, mHoldTimeLimits.holdTimeMax);
@@ -161,7 +160,8 @@ CHIP_ERROR AmbientContextSensingCluster::Attributes(const ConcreteClusterPath & 
           Attributes::ObjectCountReached::kMetadataEntry },
         { mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification),
           Attributes::ObjectCountConfig::kMetadataEntry },
-        { mOptionalAttributeSet.IsSet(ObjectCount::Id) && (mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification)),
+        { mOptionalAttributeSet.IsSet(ObjectCount::Id) &&
+              (mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification)),
           Attributes::ObjectCount::kMetadataEntry },
         { mFeatureMap.Has(Feature::kPredictedActivity), Attributes::PredictedActivity::kMetadataEntry },
     };

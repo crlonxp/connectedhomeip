@@ -20,8 +20,8 @@
 #include "ambient-context-sensing-namespace.h"
 #include <app-common/zap-generated/cluster-objects.h>
 #include <app/server-cluster/DefaultServerCluster.h>
-#include <app/server-cluster/ServerClusterContext.h>
 #include <app/server-cluster/OptionalAttributeSet.h>
+#include <app/server-cluster/ServerClusterContext.h>
 #include <lib/support/IntrusiveList.h>
 #include <lib/support/Span.h>
 #include <platform/DefaultTimerDelegate.h>
