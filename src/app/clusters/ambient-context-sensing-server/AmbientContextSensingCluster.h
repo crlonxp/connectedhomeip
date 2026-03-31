@@ -140,6 +140,7 @@ private:
         };
     uint16_t mObjectCount = 0;
     System::Clock::Timestamp mObjectCountStartTime;
+    uint64_t mObjectCountStartEpoch;
     System::Clock::Timestamp mObjectCountEndTime;
     uint16_t mHoldTime                                                         = kDefaultHoldTimeDefault;
     AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = kDefaultHoldTimeMin,

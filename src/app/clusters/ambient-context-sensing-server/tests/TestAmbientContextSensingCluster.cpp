@@ -126,6 +126,8 @@ public:
     AmbientContextSensed * GetAllocedDetection(const uint8_t id) override;
     CHIP_ERROR DelDetection(const uint8_t & id) override;
 
+    uint64_t GetEpochNow() override;
+
     TestACSDelegate(const TestACSDelegate &)             = delete;
     TestACSDelegate & operator=(const TestACSDelegate &) = delete;
     TestACSDelegate(TestACSDelegate &&)                  = delete;
@@ -228,6 +230,15 @@ CHIP_ERROR TestACSDelegate::DelDetection(const uint8_t & id)
     mAmbientContextTypeListUsed[id] = false;
 
     return CHIP_NO_ERROR;
+}
+
+uint64_t TestACSDelegate::GetEpochNow()
+{
+    using namespace chip::System::Clock;
+    Milliseconds64 timestamp_ms(0);
+    CHIP_ERROR err = System::SystemClock().GetClock_RealTimeMS(timestamp_ms);
+
+    return (err == CHIP_NO_ERROR)?(timestamp_ms.count()):(0);
 }
 
 struct TestAmbientContextSensingCluster : public ::testing::Test

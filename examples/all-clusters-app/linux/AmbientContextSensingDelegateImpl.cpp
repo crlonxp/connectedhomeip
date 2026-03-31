@@ -17,6 +17,7 @@
 
 #include "AmbientContextSensingDelegateImpl.h"
 #include <lib/support/logging/CHIPLogging.h>
+#include <system/SystemClock.h>
 
 using namespace chip;
 using namespace chip::app;
@@ -106,4 +107,13 @@ CHIP_ERROR AmbientContextSensingDelegateImpl::DelDetection(const uint8_t & id)
     mAmbientContextTypeListUsed[id] = false;
 
     return CHIP_NO_ERROR;
+}
+
+uint64_t AmbientContextSensingDelegateImpl::GetEpochNow()
+{
+    using namespace chip::System::Clock;
+    Milliseconds64 timestamp_ms(0);
+    CHIP_ERROR err = System::SystemClock().GetClock_RealTimeMS(timestamp_ms);
+
+    return (err == CHIP_NO_ERROR)?(timestamp_ms.count()):(0);
 }

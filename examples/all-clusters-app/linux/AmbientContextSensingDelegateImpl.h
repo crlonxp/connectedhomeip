@@ -40,6 +40,8 @@ public:
     AmbientContextSensed * GetAllocedDetection(const uint8_t id) override;
     CHIP_ERROR DelDetection(const uint8_t & id) override;
 
+    uint64_t GetEpochNow() override;
+
     AmbientContextSensingDelegateImpl(const AmbientContextSensingDelegateImpl &)             = delete;
     AmbientContextSensingDelegateImpl & operator=(const AmbientContextSensingDelegateImpl &) = delete;
     AmbientContextSensingDelegateImpl(AmbientContextSensingDelegateImpl &&)                  = delete;

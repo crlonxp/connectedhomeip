@@ -47,6 +47,7 @@ struct AmbientContextSensed : public IntrusiveListNodeBase<>
     SemanticTagType mOwnedTags[kMaxACSensed];
     System::Clock::Timestamp mStartTimestamp = System::Clock::Milliseconds64(0);
     System::Clock::Timestamp mEndTimestamp;
+    uint64_t mStartEpoch;
     uint8_t id;
 };
 
@@ -90,6 +91,9 @@ public:
     virtual AmbientContextSensed * GetAllocedDetection(const uint8_t id) = 0;
     // Return the space by passing the id
     virtual CHIP_ERROR DelDetection(const uint8_t & id) = 0;
+
+    // Return the current epoch
+    virtual uint64_t GetEpochNow() = 0;
 };
 
 } // namespace chip::app::Clusters::AmbientContextSensing

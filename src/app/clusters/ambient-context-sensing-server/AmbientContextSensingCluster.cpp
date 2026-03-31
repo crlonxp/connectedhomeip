@@ -240,6 +240,7 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
         item->mInfo                      = sensedEvent;
         item->mInfo.ambientContextSensed = chip::app::DataModel::List<const SemanticTagType>(item->mOwnedTags, tagCount);
         item->mStartTimestamp            = now;
+        item->mStartEpoch                = mACSDelegate->GetEpochNow();
         newHoldTime                      = System::Clock::Seconds16(mHoldTime);
     }
     else
@@ -323,6 +324,7 @@ CHIP_ERROR AmbientContextSensingCluster::SetObjectCount(uint16_t objectCount)
     VerifyOrReturnError((mFeatureMap.Has(Feature::kObjectCounting) && mFeatureMap.Has(Feature::kObjectIdentification)),
                         CHIP_ERROR_INCORRECT_STATE);
     VerifyOrReturnError(objectCount >= 1, CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrReturnError(mACSDelegate != nullptr, CHIP_ERROR_INCORRECT_STATE);
     if (objectCount == mObjectCount)
     {
         return CHIP_NO_ERROR;
@@ -332,6 +334,7 @@ CHIP_ERROR AmbientContextSensingCluster::SetObjectCount(uint16_t objectCount)
     NotifyAttributeChanged(Attributes::ObjectCount::Id);
     mObjectCountStartTime = mHoldTimeDelegate.GetCurrentMonotonicTimestamp();
     mObjectCountEndTime   = mObjectCountStartTime + System::Clock::Seconds16(mHoldTime);
+    mObjectCountStartEpoch = mACSDelegate->GetEpochNow();
     UpdateDetectionAttributes();
     UpdateEventTimeout();
     SendDetectStartEvent(mObjectCountReached, mObjectCount);
@@ -774,17 +777,17 @@ void AmbientContextSensingCluster::RemoveExpiredItems(IntrusiveList<AmbientConte
         {
             eventList.Remove(pitem);
             listSize--;
-            SendDetectEndEvent(pitem->mStartTimestamp.count());
+            SendDetectEndEvent(pitem->mStartEpoch);
             LogErrorOnFailure(mACSDelegate->DelDetection(pitem->id));
         }
     }
-    if (mObjectCountEndTime <= now)
+    if ((mObjectCount > 0) && (mObjectCountEndTime <= now))
     {
         mObjectCountEndTime = System::Clock::Timestamp(0);
         mObjectCount        = 0;
         NotifyAttributeChanged(Attributes::ObjectCount::Id);
         // Send the DetectEndEvent
-        SendDetectEndEvent(mObjectCountStartTime.count());
+        SendDetectEndEvent(mObjectCountStartEpoch);
         mObjectCountStartTime = System::Clock::Timestamp(0);
     }
 }
