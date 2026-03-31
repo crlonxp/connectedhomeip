@@ -332,8 +332,8 @@ CHIP_ERROR AmbientContextSensingCluster::SetObjectCount(uint16_t objectCount)
 
     mObjectCount = objectCount;
     NotifyAttributeChanged(Attributes::ObjectCount::Id);
-    mObjectCountStartTime = mHoldTimeDelegate.GetCurrentMonotonicTimestamp();
-    mObjectCountEndTime   = mObjectCountStartTime + System::Clock::Seconds16(mHoldTime);
+    mObjectCountStartTime  = mHoldTimeDelegate.GetCurrentMonotonicTimestamp();
+    mObjectCountEndTime    = mObjectCountStartTime + System::Clock::Seconds16(mHoldTime);
     mObjectCountStartEpoch = mACSDelegate->GetEpochNow();
     UpdateDetectionAttributes();
     UpdateEventTimeout();
