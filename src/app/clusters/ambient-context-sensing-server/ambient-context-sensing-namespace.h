@@ -80,16 +80,15 @@ constexpr const uint8_t kNamespaceIdentifiedHumanActivity = 0x4B;
 enum class TagIdentifiedHumanActivity : uint8_t
 {
     kUnknown          = 0x00,
-    kPresence         = 0x01,
-    kFall             = 0x02,
-    kSleeping         = 0x03,
-    kWalking          = 0x04,
-    kWorkout          = 0x05,
-    kSitting          = 0x06,
-    kStanding         = 0x07,
-    kDancing          = 0x08,
-    kPackageDelivery  = 0x09,
-    kPackageRetrieval = 0x0a,
+    kFall             = 0x01,
+    kSleeping         = 0x02,
+    kWalking          = 0x03,
+    kWorkout          = 0x04,
+    kSitting          = 0x05,
+    kStanding         = 0x06,
+    kDancing          = 0x07,
+    kPackageDelivery  = 0x08,
+    kPackageRetrieval = 0x09,
     kMax
 };
 

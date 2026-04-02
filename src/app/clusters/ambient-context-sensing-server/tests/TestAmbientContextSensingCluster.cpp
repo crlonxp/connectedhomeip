@@ -50,11 +50,11 @@ constexpr uint32_t g_kFeatures_all = static_cast<uint32_t>(Feature::kHumanActivi
 SemanticTagType g_kACTSupportedArray[] = {
     {
         .namespaceID = kNamespaceIdentifiedHumanActivity,
-        .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kPresence),
+        .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kFall),
     },
     {
         .namespaceID = kNamespaceIdentifiedHumanActivity,
-        .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kFall),
+        .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kSleeping),
     },
     {
         .namespaceID = kNamespaceIdentifiedObject,
@@ -77,7 +77,7 @@ SemanticTagType g_kACTSupportedArray[] = {
 SemanticTagType g_kSemanticTagDetectArray[] = {
     {
         .namespaceID = kNamespaceIdentifiedHumanActivity,
-        .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kPresence),
+        .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kFall),
     },
     {
         .namespaceID = kNamespaceIdentifiedObject,
@@ -340,11 +340,11 @@ TEST_F(TestAmbientContextSensingCluster, TestAmbientContextTypeSupported)
     SemanticTagType kACTSupported_all[] = {
         {
             .namespaceID = kNamespaceIdentifiedHumanActivity,
-            .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kPresence),
+            .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kFall),
         },
         {
             .namespaceID = kNamespaceIdentifiedHumanActivity,
-            .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kFall),
+            .tag         = static_cast<uint8_t>(TagIdentifiedHumanActivity::kSleeping),
         },
         {
             .namespaceID = kNamespaceIdentifiedObject,

@@ -652,7 +652,6 @@ constexpr TagIdentifiedSound TagIdentifiedSoundIds[] = {
 
 constexpr TagIdentifiedHumanActivity TagIdentifiedHumanActivityIds[] = {
     TagIdentifiedHumanActivity::kUnknown,
-    TagIdentifiedHumanActivity::kPresence,
     TagIdentifiedHumanActivity::kFall,
     TagIdentifiedHumanActivity::kSleeping,
     TagIdentifiedHumanActivity::kWalking,
