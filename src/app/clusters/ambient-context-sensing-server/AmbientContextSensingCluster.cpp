@@ -651,16 +651,11 @@ constexpr TagIdentifiedSound TagIdentifiedSoundIds[] = {
 };
 
 constexpr TagIdentifiedHumanActivity TagIdentifiedHumanActivityIds[] = {
-    TagIdentifiedHumanActivity::kUnknown,
-    TagIdentifiedHumanActivity::kFall,
-    TagIdentifiedHumanActivity::kSleeping,
-    TagIdentifiedHumanActivity::kWalking,
-    TagIdentifiedHumanActivity::kWorkout,
-    TagIdentifiedHumanActivity::kSitting,
-    TagIdentifiedHumanActivity::kStanding,
-    TagIdentifiedHumanActivity::kDancing,
-    TagIdentifiedHumanActivity::kPackageDelivery,
-    TagIdentifiedHumanActivity::kPackageRetrieval,
+    TagIdentifiedHumanActivity::kUnknown,         TagIdentifiedHumanActivity::kFall,
+    TagIdentifiedHumanActivity::kSleeping,        TagIdentifiedHumanActivity::kWalking,
+    TagIdentifiedHumanActivity::kWorkout,         TagIdentifiedHumanActivity::kSitting,
+    TagIdentifiedHumanActivity::kStanding,        TagIdentifiedHumanActivity::kDancing,
+    TagIdentifiedHumanActivity::kPackageDelivery, TagIdentifiedHumanActivity::kPackageRetrieval,
 };
 
 template <typename T>
