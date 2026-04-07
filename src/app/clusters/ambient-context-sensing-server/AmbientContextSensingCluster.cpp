@@ -173,7 +173,7 @@ CHIP_ERROR AmbientContextSensingCluster::SetAmbientContextTypeSupported(const Sp
 {
     ReturnErrorOnFailure(CheckInputSupportedType(ACTypeList));
     VerifyOrReturnError(mACSDelegate != nullptr, CHIP_ERROR_INCORRECT_STATE);
-
+    NotifyAttributeChanged(Attributes::AmbientContextTypeSupported::Id);
     return mACSDelegate->SetAmbientContextTypeSupported(ACTypeList);
 }
 
@@ -272,6 +272,8 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
     // Update the timer if required.
     // Note: If the new detection has existed, the newHoldTime may be small that it may expire soon
     UpdateEventTimeout();
+
+    NotifyAttributeChanged(Attributes::AmbientContextType::Id);
 
     return CHIP_NO_ERROR;
 }
@@ -432,6 +434,7 @@ CHIP_ERROR AmbientContextSensingCluster::SetPredictedActivity(const Span<Predict
     VerifyOrReturnError(mACSDelegate != nullptr, CHIP_ERROR_INCORRECT_STATE);
 
     ReturnErrorOnFailure(mACSDelegate->SetPredictedActivity(predictedActivityList));
+    NotifyAttributeChanged(Attributes::PredictedActivity::Id);
     return CHIP_NO_ERROR;
 }
 
@@ -773,6 +776,7 @@ void AmbientContextSensingCluster::RemoveExpiredItems(IntrusiveList<AmbientConte
             listSize--;
             SendDetectEndEvent(pitem->mStartEpoch);
             LogErrorOnFailure(mACSDelegate->DelDetection(pitem->id));
+            NotifyAttributeChanged(Attributes::AmbientContextType::Id);
         }
     }
     if ((mObjectCount > 0) && (mObjectCountEndTime <= now))
