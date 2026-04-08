@@ -506,7 +506,7 @@ void AmbientContextSensingCluster::SendDetectStartEvent(const AmbientContextSens
     VerifyOrReturn(mContext != nullptr);
     Events::AmbientContextDetectStarted::Type event;
     event.ambientContextDetected.SetValue(ACSItem.mInfo);
-    event.ambientContextDetected.Value().detectionStartTime.SetValue(ACSItem.mStartEpoch/1000);
+    event.ambientContextDetected.Value().detectionStartTime.SetValue(ACSItem.mStartEpoch / 1000);
     mContext->interactionContext.eventsGenerator.GenerateEvent(event, mPath.mEndpointId);
 }
 
@@ -520,7 +520,7 @@ void AmbientContextSensingCluster::SendDetectStartEvent(const bool objectCountRe
     Events::AmbientContextDetectStarted::Type event;
     AmbientContextSensingType nullACS = {};
     event.ambientContextDetected.SetValue(nullACS);
-    event.ambientContextDetected.Value().detectionStartTime.SetValue(mObjectCountStartEpoch/1000);
+    event.ambientContextDetected.Value().detectionStartTime.SetValue(mObjectCountStartEpoch / 1000);
     event.objectCountReached.SetValue(objectCountReached);
     event.objectCount.SetValue(objectCount);
     mContext->interactionContext.eventsGenerator.GenerateEvent(event, mPath.mEndpointId);
