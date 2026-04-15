@@ -143,8 +143,9 @@ private:
     void OnSessionReleased() override;
 
     void SetBLE(bool ble) { mIsBLE = ble; }
-
+#if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
     void SetWiFiPAF(bool paf) { mIsWiFiPAF = paf; }
+#endif
 
     CHIP_ERROR SetTemporaryDiscriminator(uint16_t discriminator);
 
@@ -210,8 +211,8 @@ private:
 
     bool mIsBLE = true;
 
-    bool mIsWiFiPAF = false;
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
+    bool mIsWiFiPAF = true;
     uint32_t mPublishId;
 #endif
 

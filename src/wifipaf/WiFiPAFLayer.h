@@ -169,8 +169,6 @@ public:
     WiFiPAFLayer();
     static WiFiPAFLayer & GetWiFiPAFLayer();
     CHIP_ERROR Init(chip::System::Layer * systemLayer);
-
-    typedef void (*OnCancelDeviceHandle)(uint32_t id, WiFiPAF::WiFiPafRole role);
     void Shutdown();
     bool OnWiFiPAFMessageReceived(WiFiPAFSession & RxInfo, System::PacketBufferHandle && msg);
     CHIP_ERROR OnWiFiPAFMsgRxComplete(WiFiPAFSession & RxInfo, System::PacketBufferHandle && msg);
