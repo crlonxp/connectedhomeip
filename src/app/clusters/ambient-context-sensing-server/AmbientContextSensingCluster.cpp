@@ -740,17 +740,14 @@ bool AmbientContextSensingCluster::IsSupportedEvent(const AmbientContextSensingT
 {
     VerifyOrReturnValue(mACSDelegate != nullptr, false);
 
-    const auto & tags = sensedEvent.ambientContextSensed;
+    const auto & tags        = sensedEvent.ambientContextSensed;
     const auto supportedList = mACSDelegate->GetAmbientContextTypeSupported();
 
-    return std::all_of(tags.begin(), tags.end(),
-        [&supportedList](const auto & tag) {
-            return std::any_of(supportedList.begin(), supportedList.end(),
-                [&tag](const auto & supported) {
-                    return tag.namespaceID == supported.namespaceID &&
-                           tag.tag == supported.tag;
-                });
+    return std::all_of(tags.begin(), tags.end(), [&supportedList](const auto & tag) {
+        return std::any_of(supportedList.begin(), supportedList.end(), [&tag](const auto & supported) {
+            return tag.namespaceID == supported.namespaceID && tag.tag == supported.tag;
         });
+    });
 }
 
 void AmbientContextSensingCluster::RemoveExpiredItems(IntrusiveList<AmbientContextSensed> & eventList, uint8_t & listSize,
