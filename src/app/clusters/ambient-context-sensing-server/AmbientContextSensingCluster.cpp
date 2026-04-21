@@ -738,29 +738,19 @@ CHIP_ERROR AmbientContextSensingCluster::CheckInputSupportedType(const Span<Sema
 
 bool AmbientContextSensingCluster::IsSupportedEvent(const AmbientContextSensingType & sensedEvent)
 {
-    const auto tags = sensedEvent.ambientContextSensed;
     VerifyOrReturnValue(mACSDelegate != nullptr, false);
-    for (size_t i = 0; i < tags.size(); i++)
-    {
-        bool isSupported = false;
 
-        auto ACSSupportedList = mACSDelegate->GetAmbientContextTypeSupported();
-        for (const auto & supported : ACSSupportedList)
-        {
-            if ((tags[i].namespaceID == supported.namespaceID) && (tags[i].tag == supported.tag))
-            {
-                // The event is supported.
-                isSupported = true;
-                break;
-            }
-        }
-        if (isSupported == false)
-        {
-            return false;
-        }
-    }
-    // All tags are supported
-    return true;
+    const auto & tags = sensedEvent.ambientContextSensed;
+    const auto supportedList = mACSDelegate->GetAmbientContextTypeSupported();
+
+    return std::all_of(tags.begin(), tags.end(),
+        [&supportedList](const auto & tag) {
+            return std::any_of(supportedList.begin(), supportedList.end(),
+                [&tag](const auto & supported) {
+                    return tag.namespaceID == supported.namespaceID &&
+                           tag.tag == supported.tag;
+                });
+        });
 }
 
 void AmbientContextSensingCluster::RemoveExpiredItems(IntrusiveList<AmbientContextSensed> & eventList, uint8_t & listSize,
