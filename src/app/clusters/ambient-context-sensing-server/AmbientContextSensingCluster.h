@@ -28,8 +28,6 @@
 
 namespace chip::app::Clusters {
 
-using namespace chip::app::Clusters::AmbientContextSensing;
-
 class AmbientContextSensingCluster : public DefaultServerCluster, public TimerContext
 {
 public:
@@ -60,21 +58,21 @@ public:
         EndpointId mEndpointId;
         BitMask<AmbientContextSensing::Feature> mFeatureMap = 0;
         uint32_t mOptionalAttributeBits                     = 0;
-        ObjectCountConfigType mObjectCountConfig            = {
+        AmbientContextSensing::ObjectCountConfigType mObjectCountConfig            = {
             .countingObject  = {
                 .namespaceID = kNamespaceIdentifiedObject,
                 .tag         = static_cast<uint8_t>(TagIdentifiedObject::kUnknown),
             },
-            .objectCountThreshold = kDefaultCountThreshold,
+            .objectCountThreshold = AmbientContextSensing::kDefaultCountThreshold,
             };
-        uint16_t mHoldTime                                                         = kDefaultHoldTimeDefault;
-        AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = kDefaultHoldTimeMin,
-                                                                                       .holdTimeMax     = kDefaultHoldTimeMax,
-                                                                                       .holdTimeDefault = kDefaultHoldTimeDefault };
+        uint16_t mHoldTime                                                         = AmbientContextSensing::kDefaultHoldTimeDefault;
+        AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = AmbientContextSensing::kDefaultHoldTimeMin,
+                                                                                       .holdTimeMax     = AmbientContextSensing::kDefaultHoldTimeMax,
+                                                                                       .holdTimeDefault = AmbientContextSensing::kDefaultHoldTimeDefault };
         TimerDelegate & mHoldTimeDelegate;
     };
 
-    using OptionalAttributeSet = chip::app::OptionalAttributeSet<Attributes::ObjectCount::Id>;
+    using OptionalAttributeSet = chip::app::OptionalAttributeSet<AmbientContextSensing::Attributes::ObjectCount::Id>;
 
     AmbientContextSensingCluster(const Config & config);
     ~AmbientContextSensingCluster();
@@ -89,34 +87,34 @@ public:
                                                  AttributeValueDecoder & decoder) override;
     CHIP_ERROR Attributes(const ConcreteClusterPath & path, ReadOnlyBufferBuilder<DataModel::AttributeEntry> & builder) override;
 
-    CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList);
-    CHIP_ERROR AddDetection(const AmbientContextSensingType & sensedEvent);
-    DataModel::ActionReturnStatus SetObjectCountConfig(const ObjectCountConfigType & objectCountConfig);
+    CHIP_ERROR SetAmbientContextTypeSupported(const Span<AmbientContextSensing::SemanticTagType> & ACTypeList);
+    CHIP_ERROR AddDetection(const AmbientContextSensing::AmbientContextSensingType & sensedEvent);
+    DataModel::ActionReturnStatus SetObjectCountConfig(const AmbientContextSensing::ObjectCountConfigType & objectCountConfig);
     CHIP_ERROR SetObjectCount(uint16_t objectCount);
     DataModel::ActionReturnStatus SetSimultaneousDetectionLimit(const uint8_t simultaneousDetectionLimit);
     CHIP_ERROR SetHoldTime(uint16_t holdTime);
     uint16_t GetHoldTime() const { return mHoldTime; }
     void SetHoldTimeLimits(const AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type & holdTimeLimits);
-    CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivity);
+    CHIP_ERROR SetPredictedActivity(const Span<AmbientContextSensing::PredictedActivityType> & predictedActivity);
     void TimerFired() override;
-    void SetDelegate(AmbientContextSensingDelegate * delegate) { mACSDelegate = delegate; };
+    void SetDelegate(AmbientContextSensing::AmbientContextSensingDelegate * delegate) { mACSDelegate = delegate; };
 
 private:
-    bool CompareAmbientContextSensed(const AmbientContextSensingType & sensedEvent, const AmbientContextSensingType & newEvent);
+    bool CompareAmbientContextSensed(const AmbientContextSensing::AmbientContextSensingType & sensedEvent, const AmbientContextSensing::AmbientContextSensingType & newEvent);
     CHIP_ERROR ReadAmbientContextTypeSupported(BitFlags<AmbientContextSensing::Feature> features, AttributeValueEncoder & encoder);
     CHIP_ERROR ReadAmbientContextType(AttributeValueEncoder & encoder);
-    void SendDetectStartEvent(const AmbientContextSensed & ACSItem);
+    void SendDetectStartEvent(const AmbientContextSensing::AmbientContextSensed & ACSItem);
     void SendDetectStartEvent(const bool objectCountReached, const uint16_t objectCount);
     void SendDetectEndEvent(const uint64_t eventStartTime);
     void UpdateDetectionAttributes();
     void UpdateEventTimeout();
-    CHIP_ERROR CheckInputSupportedType(const Span<SemanticTagType> & ACTSupportedList);
-    bool IsSupportedEvent(const AmbientContextSensingType & sensedEvent);
-    void RemoveExpiredItems(IntrusiveList<AmbientContextSensed> & eventList, uint8_t & listSize,
+    CHIP_ERROR CheckInputSupportedType(const Span<AmbientContextSensing::SemanticTagType> & ACTSupportedList);
+    bool IsSupportedEvent(const AmbientContextSensing::AmbientContextSensingType & sensedEvent);
+    void RemoveExpiredItems(IntrusiveList<AmbientContextSensing::AmbientContextSensed> & eventList, uint8_t & listSize,
                             const System::Clock::Timestamp & now);
 
     System::Clock::Timestamp FindEarliestEndTimestamp();
-    CHIP_ERROR CheckPredictedActivity(const Span<PredictedActivityType> & predictedActivityList);
+    CHIP_ERROR CheckPredictedActivity(const Span<AmbientContextSensing::PredictedActivityType> & predictedActivityList);
     CHIP_ERROR ReadPredictedActivity(AttributeValueEncoder & encoder);
 
     const BitMask<AmbientContextSensing::Feature> mFeatureMap;
@@ -124,28 +122,28 @@ private:
     bool mHumanActivityDetected                  = false;
     bool mObjectIdentified                       = false;
     bool mAudioContextDetected                   = false;
-    AmbientContextSensingDelegate * mACSDelegate = nullptr;
+    AmbientContextSensing::AmbientContextSensingDelegate * mACSDelegate = nullptr;
 
-    IntrusiveList<AmbientContextSensed> mAmbientContextTypeList;
+    IntrusiveList<AmbientContextSensing::AmbientContextSensed> mAmbientContextTypeList;
     uint8_t mAmbientContextTypeListSize = 0;
 
-    uint8_t mSimultaneousDetectionLimit = kDefaultSimultaneousDetectionLimit;
+    uint8_t mSimultaneousDetectionLimit = AmbientContextSensing::kDefaultSimultaneousDetectionLimit;
     bool mObjectCountReached            = false;
-    ObjectCountConfigType mObjectCountConfig = {
+    AmbientContextSensing::ObjectCountConfigType mObjectCountConfig = {
             .countingObject  = {
                 .namespaceID = kNamespaceIdentifiedObject,
                 .tag         = static_cast<uint8_t>(TagIdentifiedObject::kUnknown),
             },
-            .objectCountThreshold = kDefaultCountThreshold,
+            .objectCountThreshold = AmbientContextSensing::kDefaultCountThreshold,
         };
     uint16_t mObjectCount = 0;
     System::Clock::Timestamp mObjectCountStartTime;
     uint64_t mObjectCountStartEpoch;
     System::Clock::Timestamp mObjectCountEndTime;
-    uint16_t mHoldTime                                                         = kDefaultHoldTimeDefault;
-    AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = kDefaultHoldTimeMin,
-                                                                                   .holdTimeMax     = kDefaultHoldTimeMax,
-                                                                                   .holdTimeDefault = kDefaultHoldTimeDefault };
+    uint16_t mHoldTime                                                         = AmbientContextSensing::kDefaultHoldTimeDefault;
+    AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = AmbientContextSensing::kDefaultHoldTimeMin,
+                                                                                   .holdTimeMax     = AmbientContextSensing::kDefaultHoldTimeMax,
+                                                                                   .holdTimeDefault = AmbientContextSensing::kDefaultHoldTimeDefault };
     TimerDelegate & mHoldTimeDelegate;
 };
 
