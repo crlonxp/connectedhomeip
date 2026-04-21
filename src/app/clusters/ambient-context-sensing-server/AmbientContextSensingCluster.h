@@ -66,9 +66,11 @@ public:
             .objectCountThreshold = AmbientContextSensing::kDefaultCountThreshold,
             };
         uint16_t mHoldTime                                                         = AmbientContextSensing::kDefaultHoldTimeDefault;
-        AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = AmbientContextSensing::kDefaultHoldTimeMin,
-                                                                                       .holdTimeMax     = AmbientContextSensing::kDefaultHoldTimeMax,
-                                                                                       .holdTimeDefault = AmbientContextSensing::kDefaultHoldTimeDefault };
+        AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = {
+            .holdTimeMin     = AmbientContextSensing::kDefaultHoldTimeMin,
+            .holdTimeMax     = AmbientContextSensing::kDefaultHoldTimeMax,
+            .holdTimeDefault = AmbientContextSensing::kDefaultHoldTimeDefault
+        };
         TimerDelegate & mHoldTimeDelegate;
     };
 
@@ -100,7 +102,8 @@ public:
     void SetDelegate(AmbientContextSensing::AmbientContextSensingDelegate * delegate) { mACSDelegate = delegate; };
 
 private:
-    bool CompareAmbientContextSensed(const AmbientContextSensing::AmbientContextSensingType & sensedEvent, const AmbientContextSensing::AmbientContextSensingType & newEvent);
+    bool CompareAmbientContextSensed(const AmbientContextSensing::AmbientContextSensingType & sensedEvent,
+                                     const AmbientContextSensing::AmbientContextSensingType & newEvent);
     CHIP_ERROR ReadAmbientContextTypeSupported(BitFlags<AmbientContextSensing::Feature> features, AttributeValueEncoder & encoder);
     CHIP_ERROR ReadAmbientContextType(AttributeValueEncoder & encoder);
     void SendDetectStartEvent(const AmbientContextSensing::AmbientContextSensed & ACSItem);
@@ -119,9 +122,9 @@ private:
 
     const BitMask<AmbientContextSensing::Feature> mFeatureMap;
     const OptionalAttributeSet mOptionalAttributeSet;
-    bool mHumanActivityDetected                  = false;
-    bool mObjectIdentified                       = false;
-    bool mAudioContextDetected                   = false;
+    bool mHumanActivityDetected                                         = false;
+    bool mObjectIdentified                                              = false;
+    bool mAudioContextDetected                                          = false;
     AmbientContextSensing::AmbientContextSensingDelegate * mACSDelegate = nullptr;
 
     IntrusiveList<AmbientContextSensing::AmbientContextSensed> mAmbientContextTypeList;
@@ -141,9 +144,11 @@ private:
     uint64_t mObjectCountStartEpoch;
     System::Clock::Timestamp mObjectCountEndTime;
     uint16_t mHoldTime                                                         = AmbientContextSensing::kDefaultHoldTimeDefault;
-    AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = { .holdTimeMin     = AmbientContextSensing::kDefaultHoldTimeMin,
-                                                                                   .holdTimeMax     = AmbientContextSensing::kDefaultHoldTimeMax,
-                                                                                   .holdTimeDefault = AmbientContextSensing::kDefaultHoldTimeDefault };
+    AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type mHoldTimeLimits = {
+        .holdTimeMin     = AmbientContextSensing::kDefaultHoldTimeMin,
+        .holdTimeMax     = AmbientContextSensing::kDefaultHoldTimeMax,
+        .holdTimeDefault = AmbientContextSensing::kDefaultHoldTimeDefault
+    };
     TimerDelegate & mHoldTimeDelegate;
 };
 
