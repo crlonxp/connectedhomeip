@@ -576,7 +576,7 @@ CHIP_ERROR CommissioningWindowManager::StopAdvertisement(bool aShuttingDown)
     if ((mIsWiFiPAF) && (aShuttingDown) && (mPublishId != 0) && (mPublishId != WiFiPAF::kUndefinedWiFiPafSessionId))
     {
         ChipLogProgress(WiFiPAF, "Canceling Wi-Fi PAF publish");
-        (void) DeviceLayer::ConnectivityMgr().SetWiFiPAFAdvertisingEnabled(false, mPublishId);
+        TEMPORARY_RETURN_IGNORED DeviceLayer::ConnectivityMgr().SetWiFiPAFAdvertisingEnabled(false, mPublishId);
     }
 #endif
 

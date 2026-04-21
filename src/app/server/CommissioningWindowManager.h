@@ -212,8 +212,10 @@ private:
     bool mIsBLE = true;
 
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
-    bool mIsWiFiPAF = true;
-    uint32_t mPublishId;
+    bool mIsWiFiPAF     = true;
+    // Both 0 and kUndefinedWiFiPafSessionId are invalid publish-id.
+    // Use 0 as the default value so that the PAF definition does not need to be included.
+    uint32_t mPublishId = 0;
 #endif
 
 #if CHIP_DEVICE_CONFIG_ENABLE_JOINT_FABRIC

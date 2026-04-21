@@ -186,7 +186,7 @@ public:
 #if CHIP_DEVICE_CONFIG_ENABLE_WIFIPAF
     struct WiFiPAFAdvertiseParam;
     void WiFiPAFSetParam(const WiFiPAFAdvertiseParam & pafAdvParam);
-    CHIP_ERROR SetWiFiPAFAdvertisingEnabled(bool val, uint32_t & publishId);
+    CHIP_ERROR SetWiFiPAFAdvertisingEnabled(bool enabled, uint32_t & publishId);
     CHIP_ERROR WiFiPAFPublish(WiFiPAFAdvertiseParam & args);
     CHIP_ERROR WiFiPAFCancelPublish(uint32_t PublishId);
     typedef void (*OnConnectionCompleteFunct)(void * appState);
@@ -454,9 +454,9 @@ inline void ConnectivityManager::WiFiPAFSetParam(const WiFiPAFAdvertiseParam & p
     return static_cast<ImplClass *>(this)->_WiFiPAFSetParam(pafAdvParam);
 }
 
-inline CHIP_ERROR ConnectivityManager::SetWiFiPAFAdvertisingEnabled(bool val, uint32_t & publishId)
+inline CHIP_ERROR ConnectivityManager::SetWiFiPAFAdvertisingEnabled(bool enabled, uint32_t & publishId)
 {
-    return static_cast<ImplClass *>(this)->_SetWiFiPAFAdvertisingEnabled(val, publishId);
+    return static_cast<ImplClass *>(this)->_SetWiFiPAFAdvertisingEnabled(enabled, publishId);
 }
 
 inline CHIP_ERROR ConnectivityManager::WiFiPAFPublish(WiFiPAFAdvertiseParam & args)
