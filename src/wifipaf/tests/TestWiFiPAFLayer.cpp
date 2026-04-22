@@ -65,8 +65,8 @@ public:
 
     void TearDown() override
     {
-        mWiFiPAFTransport = nullptr;
         Shutdown();
+        mWiFiPAFTransport = nullptr;
     }
 
     CHIP_ERROR WiFiPAFMessageReceived(WiFiPAFSession & RxInfo, System::PacketBufferHandle && msg) override { return CHIP_NO_ERROR; }
