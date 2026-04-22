@@ -1509,7 +1509,7 @@ CHIP_ERROR ConnectivityManagerImpl::_SetWiFiPAFAdvertisingEnabled(bool enabled, 
         return res;
     }
     // Cancel paf_publish, publish_id should be valid
-    VerifyOrReturnError(publishId != WiFiPAF::kUndefinedWiFiPafSessionId, CHIP_ERROR_INCORRECT_STATE);
+    VerifyOrReturnError((publishId != 0) && (publishId != WiFiPAF::kUndefinedWiFiPafSessionId), CHIP_ERROR_INCORRECT_STATE);
     return WiFiPAFCancelPublish(publishId);
 }
 
