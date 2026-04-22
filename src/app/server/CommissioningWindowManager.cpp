@@ -519,6 +519,7 @@ CHIP_ERROR CommissioningWindowManager::StartAdvertisement()
         auto err = DeviceLayer::ConnectivityMgr().SetWiFiPAFAdvertisingEnabled(true, mPublishId);
         if (err != CHIP_NO_ERROR)
         {
+            ChipLogError(WiFiPAF, "Failed to start Wi-Fi PAF publish: %" CHIP_ERROR_FORMAT, err.Format());
             mPublishId = WiFiPAF::kUndefinedWiFiPafSessionId;
         }
     }
