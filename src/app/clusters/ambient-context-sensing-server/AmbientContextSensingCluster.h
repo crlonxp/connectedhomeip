@@ -77,7 +77,7 @@ public:
     using OptionalAttributeSet = chip::app::OptionalAttributeSet<AmbientContextSensing::Attributes::ObjectCount::Id>;
 
     AmbientContextSensingCluster(const Config & config);
-    ~AmbientContextSensingCluster();
+    ~AmbientContextSensingCluster() = default;
 
     CHIP_ERROR Startup(ServerClusterContext & context) override;
     void Shutdown(ClusterShutdownType shutdownType) override;
@@ -99,7 +99,8 @@ public:
     void SetHoldTimeLimits(const AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type & holdTimeLimits);
     CHIP_ERROR SetPredictedActivity(const Span<AmbientContextSensing::PredictedActivityType> & predictedActivity);
     void TimerFired() override;
-    void SetDelegate(AmbientContextSensing::AmbientContextSensingDelegate * delegate) { mACSDelegate = delegate; };
+    void SetDelegate(AmbientContextSensing::AmbientContextSensingDelegate & delegate) { mACSDelegate = &delegate; };
+    void ResetDelegate() { mACSDelegate = &mDefaultACSDelegate; };
 
 private:
     bool CompareAmbientContextSensed(const AmbientContextSensing::AmbientContextSensingType & sensedEvent,
@@ -122,10 +123,11 @@ private:
 
     const BitMask<AmbientContextSensing::Feature> mFeatureMap;
     const OptionalAttributeSet mOptionalAttributeSet;
-    bool mHumanActivityDetected                                         = false;
-    bool mObjectIdentified                                              = false;
-    bool mAudioContextDetected                                          = false;
-    AmbientContextSensing::AmbientContextSensingDelegate * mACSDelegate = nullptr;
+    bool mHumanActivityDetected = false;
+    bool mObjectIdentified      = false;
+    bool mAudioContextDetected  = false;
+    AmbientContextSensing::AmbientContextSensingDelegate mDefaultACSDelegate;
+    AmbientContextSensing::AmbientContextSensingDelegate * mACSDelegate = &mDefaultACSDelegate;
 
     IntrusiveList<AmbientContextSensing::AmbientContextSensed> mAmbientContextTypeList;
     uint8_t mAmbientContextTypeListSize = 0;

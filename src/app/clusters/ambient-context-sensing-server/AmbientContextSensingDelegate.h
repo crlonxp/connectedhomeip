@@ -76,24 +76,27 @@ class AmbientContextSensingDelegate
 public:
     virtual ~AmbientContextSensingDelegate() = default;
     // Save the AmbientContextTypeSupported attribute passed from the caller
-    virtual CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) = 0;
+    virtual CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) { return CHIP_ERROR_INCORRECT_STATE; }
     // Return the stored AmbientContextTypeSupported
-    virtual Span<SemanticTagType> & GetAmbientContextTypeSupported() = 0;
+    virtual Span<SemanticTagType> & GetAmbientContextTypeSupported() { return mEmptyACTypeSupported; }
 
     // Save the PredictedActivity attribute passed from the caller
-    virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList) = 0;
+    virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList) { return CHIP_ERROR_INCORRECT_STATE; }
     // Return the stored PredictedActivity
-    virtual Span<PredictActivity> & GetPredictedActivity() = 0;
+    virtual Span<PredictActivity> & GetPredictedActivity() { return mEmptyPredictActivity; }
 
     // Retrieve the id of an available AmbientContextType from delegate and mark it as allocated
-    virtual DetectFuncResult FindAndUseAvailableDetection() = 0;
+    virtual DetectFuncResult FindAndUseAvailableDetection() { return {.res = CHIP_ERROR_INCORRECT_STATE}; }
     // Get the pointer of the space from the returned id in FindAndUseAvailableDetection()
-    virtual AmbientContextSensed * GetAllocedDetection(const uint8_t id) = 0;
+    virtual AmbientContextSensed * GetAllocedDetection(const uint8_t id) { return nullptr; }
     // Return the space by passing the id
-    virtual CHIP_ERROR DelDetection(const uint8_t & id) = 0;
+    virtual CHIP_ERROR DelDetection(const uint8_t & id) { return CHIP_ERROR_INCORRECT_STATE; }
 
     // Return the current epoch
-    virtual uint64_t GetEpochNow() = 0;
+    virtual uint64_t GetEpochNow() { return 0; }
+private:
+    Span<SemanticTagType> mEmptyACTypeSupported{};
+    Span<PredictActivity> mEmptyPredictActivity{};
 };
 
 } // namespace chip::app::Clusters::AmbientContextSensing

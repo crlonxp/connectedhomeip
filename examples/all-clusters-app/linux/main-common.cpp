@@ -120,6 +120,7 @@ Clusters::TemperatureControl::AppSupportedTemperatureLevelsDelegate sAppSupporte
 Clusters::ModeSelect::StaticSupportedModesManager sStaticSupportedModesManager;
 Clusters::ValveConfigurationAndControl::ValveControlDelegate sValveDelegate;
 Clusters::TimeSynchronization::ExtendedTimeSyncDelegate sTimeSyncDelegate;
+Clusters::AmbientContextSensingDelegateImpl * sACSDelegate[CHIP_DEVICE_CONFIG_DYNAMIC_ENDPOINT_COUNT] = {};
 
 // Please refer to https://github.com/CHIP-Specifications/connectedhomeip-spec/blob/master/src/namespaces
 constexpr const uint8_t kNamespaceCommon   = 7;
@@ -270,6 +271,14 @@ void ApplicationShutdown()
     {
         ChipLogError(NotSpecified, "Failed to stop CHIP NamedPipeCommands");
     }
+
+    std::for_each(std::begin(sACSDelegate),
+                  std::end(sACSDelegate),
+                  [](auto & delegate) {
+                      chip::Platform::Delete(delegate);
+                      delegate = nullptr;
+                  });
+
 }
 
 using namespace chip::app::Clusters::LaundryWasherControls;
@@ -299,10 +308,17 @@ void emberAfWindowCoveringClusterInitCallback(chip::EndpointId endpoint)
 
 void emberAfAmbientContextSensingClusterInitCallback(chip::EndpointId endpoint)
 {
-    auto * cluster                                            = Clusters::AmbientContextSensing::FindClusterOnEndpoint(endpoint);
-    Clusters::AmbientContextSensingDelegateImpl * ACSDelegate = chip::Platform::New<Clusters::AmbientContextSensingDelegateImpl>();
-    VerifyOrReturn(ACSDelegate != nullptr);
-    cluster->SetDelegate(ACSDelegate);
+    auto * cluster = Clusters::AmbientContextSensing::FindClusterOnEndpoint(endpoint);
+    VerifyOrReturn(cluster != nullptr);
+
+    auto it = std::find(std::begin(sACSDelegate),
+                    std::end(sACSDelegate),
+                    nullptr);
+    VerifyOrReturn(it != std::end(sACSDelegate));
+    auto * delegate = chip::Platform::New<Clusters::AmbientContextSensingDelegateImpl>();
+    VerifyOrReturn(delegate != nullptr);
+    *it = delegate;
+    cluster->SetDelegate(*delegate);
 }
 
 using namespace chip::app::Clusters::DiagnosticLogs;
