@@ -447,8 +447,9 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimeAttribute)
     AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type holdTimeLimitsConfig = { .holdTimeMin     = 10,
                                                                                         .holdTimeMax     = 200,
                                                                                         .holdTimeDefault = 100 };
-    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(
-        100, holdTimeLimitsConfig).WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all)) };
+    AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
+                                              .WithHoldTime(100, holdTimeLimitsConfig)
+                                              .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all)) };
     EXPECT_EQ(cluster.Startup(context.Get()), CHIP_NO_ERROR);
     static TestACSDelegate testACSDelegate;
 
@@ -504,11 +505,9 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimePersistence)
 
     // 1. Create a cluster. On startup, it should store the default hold time.
     {
-        AmbientContextSensingCluster cluster{
-            AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(kDefaultHoldTime,
-                                                                                                     holdTimeLimitsConfig).
-            WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all))
-        };
+        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
+                                                  .WithHoldTime(kDefaultHoldTime, holdTimeLimitsConfig)
+                                                  .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all)) };
 
         static TestACSDelegate testACSDelegate;
         cluster.SetDelegate(testACSDelegate);
@@ -524,11 +523,9 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimePersistence)
 
     // 2. Write a new value to the attribute. This should update the value in persistence.
     {
-        AmbientContextSensingCluster cluster{
-            AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(kDefaultHoldTime,
-                                                                                                     holdTimeLimitsConfig).
-            WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all))
-        };
+        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
+                                                  .WithHoldTime(kDefaultHoldTime, holdTimeLimitsConfig)
+                                                  .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all)) };
 
         static TestACSDelegate testACSDelegate;
         cluster.SetDelegate(testACSDelegate);
@@ -541,11 +538,9 @@ TEST_F(TestAmbientContextSensingCluster, TestHoldTimePersistence)
 
     // 3. Create a new cluster instance. It should load the new value from persistence on startup.
     {
-        AmbientContextSensingCluster cluster{
-            AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }.WithHoldTime(kDefaultHoldTime,
-                                                                                                     holdTimeLimitsConfig).
-            WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all))
-        };
+        AmbientContextSensingCluster cluster{ AmbientContextSensingCluster::Config{ kTestEndpointId, mMockTimerDelegate }
+                                                  .WithHoldTime(kDefaultHoldTime, holdTimeLimitsConfig)
+                                                  .WithFeatures(AmbientContextSensing::Feature(g_kFeatures_all)) };
 
         static TestACSDelegate testACSDelegate;
         cluster.SetDelegate(testACSDelegate);

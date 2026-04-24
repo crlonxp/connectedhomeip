@@ -76,17 +76,23 @@ class AmbientContextSensingDelegate
 public:
     virtual ~AmbientContextSensingDelegate() = default;
     // Save the AmbientContextTypeSupported attribute passed from the caller
-    virtual CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) { return CHIP_ERROR_INCORRECT_STATE; }
+    virtual CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
+    {
+        return CHIP_ERROR_INCORRECT_STATE;
+    }
     // Return the stored AmbientContextTypeSupported
     virtual Span<SemanticTagType> & GetAmbientContextTypeSupported() { return mEmptyACTypeSupported; }
 
     // Save the PredictedActivity attribute passed from the caller
-    virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList) { return CHIP_ERROR_INCORRECT_STATE; }
+    virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList)
+    {
+        return CHIP_ERROR_INCORRECT_STATE;
+    }
     // Return the stored PredictedActivity
     virtual Span<PredictActivity> & GetPredictedActivity() { return mEmptyPredictActivity; }
 
     // Retrieve the id of an available AmbientContextType from delegate and mark it as allocated
-    virtual DetectFuncResult FindAndUseAvailableDetection() { return {.res = CHIP_ERROR_INCORRECT_STATE}; }
+    virtual DetectFuncResult FindAndUseAvailableDetection() { return { .res = CHIP_ERROR_INCORRECT_STATE }; }
     // Get the pointer of the space from the returned id in FindAndUseAvailableDetection()
     virtual AmbientContextSensed * GetAllocedDetection(const uint8_t id) { return nullptr; }
     // Return the space by passing the id
@@ -94,6 +100,7 @@ public:
 
     // Return the current epoch
     virtual uint64_t GetEpochNow() { return 0; }
+
 private:
     Span<SemanticTagType> mEmptyACTypeSupported{};
     Span<PredictActivity> mEmptyPredictActivity{};

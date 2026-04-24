@@ -31,8 +31,8 @@ AmbientContextSensingCluster::AmbientContextSensingCluster(const Config & config
     DefaultServerCluster({ config.mEndpointId, AmbientContextSensing::Id }), mFeatureMap(config.mFeatureMap),
     mOptionalAttributeSet(config.mOptionalAttributeBits), mHoldTimeDelegate(config.mHoldTimeDelegate)
 {
-    assert(mFeatureMap.Has(Feature::kHumanActivity)|mFeatureMap.Has(Feature::kObjectIdentification)|
-        mFeatureMap.Has(Feature::kSoundIdentification)|mFeatureMap.Has(Feature::kObjectCounting));
+    assert(mFeatureMap.Has(Feature::kHumanActivity) | mFeatureMap.Has(Feature::kObjectIdentification) |
+           mFeatureMap.Has(Feature::kSoundIdentification) | mFeatureMap.Has(Feature::kObjectCounting));
     SetHoldTimeLimits(config.mHoldTimeLimits);
     mHoldTime = std::clamp(config.mHoldTime, mHoldTimeLimits.holdTimeMin, mHoldTimeLimits.holdTimeMax);
 }

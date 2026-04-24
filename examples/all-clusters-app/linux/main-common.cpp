@@ -272,13 +272,10 @@ void ApplicationShutdown()
         ChipLogError(NotSpecified, "Failed to stop CHIP NamedPipeCommands");
     }
 
-    std::for_each(std::begin(sACSDelegate),
-                  std::end(sACSDelegate),
-                  [](auto & delegate) {
-                      chip::Platform::Delete(delegate);
-                      delegate = nullptr;
-                  });
-
+    std::for_each(std::begin(sACSDelegate), std::end(sACSDelegate), [](auto & delegate) {
+        chip::Platform::Delete(delegate);
+        delegate = nullptr;
+    });
 }
 
 using namespace chip::app::Clusters::LaundryWasherControls;
@@ -311,9 +308,7 @@ void emberAfAmbientContextSensingClusterInitCallback(chip::EndpointId endpoint)
     auto * cluster = Clusters::AmbientContextSensing::FindClusterOnEndpoint(endpoint);
     VerifyOrReturn(cluster != nullptr);
 
-    auto it = std::find(std::begin(sACSDelegate),
-                    std::end(sACSDelegate),
-                    nullptr);
+    auto it = std::find(std::begin(sACSDelegate), std::end(sACSDelegate), nullptr);
     VerifyOrReturn(it != std::end(sACSDelegate));
     auto * delegate = chip::Platform::New<Clusters::AmbientContextSensingDelegateImpl>();
     VerifyOrReturn(delegate != nullptr);
