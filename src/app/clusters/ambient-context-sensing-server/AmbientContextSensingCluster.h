@@ -89,18 +89,28 @@ public:
                                                  AttributeValueDecoder & decoder) override;
     CHIP_ERROR Attributes(const ConcreteClusterPath & path, ReadOnlyBufferBuilder<DataModel::AttributeEntry> & builder) override;
 
+    const BitMask<AmbientContextSensing::Feature> & GetFeatures() const { return mFeatureMap; }
+
+    bool GetHumanActivityDetected() { return mHumanActivityDetected; }
+    bool GetObjectIdentified() { return mObjectIdentified; }
+    bool GetAudioContextDetected() { return mAudioContextDetected; }
+    bool GetObjectCountReached() { return mObjectCountReached; }
     CHIP_ERROR SetAmbientContextTypeSupported(const Span<AmbientContextSensing::SemanticTagType> & ACTypeList);
     CHIP_ERROR AddDetection(const AmbientContextSensing::AmbientContextSensingType & sensedEvent);
     DataModel::ActionReturnStatus SetObjectCountConfig(const AmbientContextSensing::ObjectCountConfigType & objectCountConfig);
+    AmbientContextSensing::ObjectCountConfigType GetObjectCountConfig() { return mObjectCountConfig; }
     CHIP_ERROR SetObjectCount(uint16_t objectCount);
+    uint16_t GetObjectCount() { return mObjectCount; }
     DataModel::ActionReturnStatus SetSimultaneousDetectionLimit(const uint8_t simultaneousDetectionLimit);
+    uint8_t GetSimultaneousDetectionLimit() { return mSimultaneousDetectionLimit; }
     CHIP_ERROR SetHoldTime(uint16_t holdTime);
     uint16_t GetHoldTime() const { return mHoldTime; }
     void SetHoldTimeLimits(const AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type & holdTimeLimits);
+    AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type GetHoldTimeLimits() { return mHoldTimeLimits; }
     CHIP_ERROR SetPredictedActivity(const Span<AmbientContextSensing::PredictedActivityType> & predictedActivity);
     void TimerFired() override;
-    void SetDelegate(AmbientContextSensing::AmbientContextSensingDelegate & delegate) { mACSDelegate = &delegate; };
-    void ResetDelegate() { mACSDelegate = &mDefaultACSDelegate; };
+    void SetDelegate(AmbientContextSensing::AmbientContextSensingDelegate & delegate) { mACSDelegate = &delegate; }
+    void ResetDelegate() { mACSDelegate = &mDefaultACSDelegate; }
 
 private:
     bool CompareAmbientContextSensed(const AmbientContextSensing::AmbientContextSensingType & sensedEvent,
@@ -128,6 +138,8 @@ private:
     bool mAudioContextDetected  = false;
     AmbientContextSensing::AmbientContextSensingDelegate mDefaultACSDelegate;
     AmbientContextSensing::AmbientContextSensingDelegate * mACSDelegate = &mDefaultACSDelegate;
+
+    Span<AmbientContextSensing::SemanticTagType> mAmbientContextTypeSupportedList;
 
     IntrusiveList<AmbientContextSensing::AmbientContextSensed> mAmbientContextTypeList;
     uint8_t mAmbientContextTypeListSize = 0;

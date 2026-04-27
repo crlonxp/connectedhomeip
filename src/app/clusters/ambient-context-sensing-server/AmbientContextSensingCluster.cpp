@@ -66,6 +66,7 @@ CHIP_ERROR AmbientContextSensingCluster::Startup(ServerClusterContext & context)
 void AmbientContextSensingCluster::Shutdown(ClusterShutdownType shutdownType)
 {
     ResetDelegate();
+    mAmbientContextTypeSupportedList = {};
     mAmbientContextTypeList.Clear();
     mAmbientContextTypeListSize = 0;
     mHoldTimeDelegate.CancelTimer(this);
@@ -78,31 +79,31 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::ReadAttribute(const 
     switch (request.path.mAttributeId)
     {
     case HumanActivityDetected::Id:
-        return encoder.Encode(mHumanActivityDetected);
+        return encoder.Encode(GetHumanActivityDetected());
     case ObjectIdentified::Id:
-        return encoder.Encode(mObjectIdentified);
+        return encoder.Encode(GetObjectIdentified());
     case AudioContextDetected::Id:
-        return encoder.Encode(mAudioContextDetected);
+        return encoder.Encode(GetAudioContextDetected());
     case AmbientContextType::Id:
         return ReadAmbientContextType(encoder);
     case AmbientContextTypeSupported::Id:
         return ReadAmbientContextTypeSupported(mFeatureMap, encoder);
     case ObjectCountReached::Id:
-        return encoder.Encode(mObjectCountReached);
+        return encoder.Encode(GetObjectCountReached());
     case ObjectCountConfig::Id:
-        return encoder.Encode(mObjectCountConfig);
+        return encoder.Encode(GetObjectCountConfig());
     case ObjectCount::Id:
-        return encoder.Encode(mObjectCount);
+        return encoder.Encode(GetObjectCount());
     case SimultaneousDetectionLimit::Id:
-        return encoder.Encode(mSimultaneousDetectionLimit);
+        return encoder.Encode(GetSimultaneousDetectionLimit());
     case HoldTime::Id:
-        return encoder.Encode(mHoldTime);
+        return encoder.Encode(GetHoldTime());
     case HoldTimeLimits::Id:
-        return encoder.Encode(mHoldTimeLimits);
+        return encoder.Encode(GetHoldTimeLimits());
     case PredictedActivity::Id:
         return ReadPredictedActivity(encoder);
     case FeatureMap::Id:
-        return encoder.Encode(mFeatureMap);
+        return encoder.Encode(GetFeatures());
     case ClusterRevision::Id:
         return encoder.Encode(AmbientContextSensing::kRevision);
     default:
@@ -167,8 +168,16 @@ CHIP_ERROR AmbientContextSensingCluster::Attributes(const ConcreteClusterPath & 
 CHIP_ERROR AmbientContextSensingCluster::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
 {
     ReturnErrorOnFailure(CheckInputSupportedType(ACTypeList));
+    VerifyOrReturnError(ACTypeList.size() <= kMaxACTypeSupported, CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrReturnError(ACTypeList.size() > 0, CHIP_ERROR_INVALID_ARGUMENT);
+
+    auto * ambientContextTypeSupportedBuf = mACSDelegate->GetAmbientContextTypeSupportedBuf(ACTypeList.size());
+    VerifyOrReturnError(ambientContextTypeSupportedBuf != nullptr, CHIP_ERROR_INCORRECT_STATE);
+    std::copy(ACTypeList.begin(), ACTypeList.end(), ambientContextTypeSupportedBuf);
+    mAmbientContextTypeSupportedList = Span<SemanticTagType>(ambientContextTypeSupportedBuf, ACTypeList.size());
+
     NotifyAttributeChanged(Attributes::AmbientContextTypeSupported::Id);
-    return mACSDelegate->SetAmbientContextTypeSupported(ACTypeList);
+    return CHIP_NO_ERROR;
 }
 
 CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensingType & sensedEvent)
@@ -282,7 +291,7 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::SetObjectCountConfig
         VerifyOrReturnError(newObjectCountConfig.countingObject.namespaceID == kNamespaceIdentifiedObject,
                             Protocols::InteractionModel::Status::ConstraintError);
         bool inList           = false;
-        auto ACSSupportedList = mACSDelegate->GetAmbientContextTypeSupported();
+        auto & ACSSupportedList = mAmbientContextTypeSupportedList;
         for (const auto & item : ACSSupportedList)
         {
             if (item.tag == newObjectCountConfig.countingObject.tag)
@@ -462,7 +471,7 @@ bool AmbientContextSensingCluster::CompareAmbientContextSensed(const AmbientCont
 CHIP_ERROR AmbientContextSensingCluster::ReadAmbientContextTypeSupported(BitFlags<AmbientContextSensing::Feature> features,
                                                                          AttributeValueEncoder & encoder)
 {
-    auto ACSSupportedList = mACSDelegate->GetAmbientContextTypeSupported();
+    auto & ACSSupportedList = mAmbientContextTypeSupportedList;
     VerifyOrReturnValue(!ACSSupportedList.empty(), encoder.EncodeEmptyList());
 
     return encoder.EncodeList([&ACSSupportedList](const auto & encode) -> CHIP_ERROR {
@@ -477,7 +486,7 @@ CHIP_ERROR AmbientContextSensingCluster::ReadAmbientContextTypeSupported(BitFlag
 CHIP_ERROR AmbientContextSensingCluster::ReadAmbientContextType(AttributeValueEncoder & encoder)
 {
     // If the supported_list is empty => No detection can be added
-    auto ACSSupportedList = mACSDelegate->GetAmbientContextTypeSupported();
+    auto & ACSSupportedList = mAmbientContextTypeSupportedList;
     VerifyOrReturnValue(!ACSSupportedList.empty(), encoder.EncodeEmptyList());
 
     return encoder.EncodeList([this](const auto & encode) -> CHIP_ERROR {
@@ -727,7 +736,7 @@ CHIP_ERROR AmbientContextSensingCluster::CheckInputSupportedType(const Span<Sema
 bool AmbientContextSensingCluster::IsSupportedEvent(const AmbientContextSensingType & sensedEvent)
 {
     const auto & tags        = sensedEvent.ambientContextSensed;
-    const auto supportedList = mACSDelegate->GetAmbientContextTypeSupported();
+    const auto & supportedList = mAmbientContextTypeSupportedList;
 
     return std::all_of(tags.begin(), tags.end(), [&supportedList](const auto & tag) {
         return std::any_of(supportedList.begin(), supportedList.end(), [&tag](const auto & supported) {

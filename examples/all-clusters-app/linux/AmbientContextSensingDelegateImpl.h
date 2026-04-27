@@ -30,8 +30,8 @@ class AmbientContextSensingDelegateImpl : public AmbientContextSensingDelegate
 public:
     AmbientContextSensingDelegateImpl();
     ~AmbientContextSensingDelegateImpl() = default;
-    CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList) override;
-    Span<SemanticTagType> & GetAmbientContextTypeSupported() override { return mAmbientContextTypeSupportedList; };
+
+    SemanticTagType * GetAmbientContextTypeSupportedBuf(size_t size) override;
 
     CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList) override;
     Span<PredictActivity> & GetPredictedActivity() override { return mPredictedActivityList; };
@@ -49,7 +49,6 @@ public:
 
 private:
     SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported];
-    Span<SemanticTagType> mAmbientContextTypeSupportedList;
 
     PredictActivity mPredictActivityBuf[kMaxPredictedActivity];
     Span<PredictActivity> mPredictedActivityList;

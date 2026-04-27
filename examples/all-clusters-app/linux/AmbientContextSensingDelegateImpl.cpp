@@ -24,11 +24,10 @@ using namespace chip::app;
 using namespace chip::app::Clusters;
 
 AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl() :
-    mAmbientContextTypeSupportedList(mAmbientContextTypeSupportedBuf), mPredictedActivityList(mPredictActivityBuf)
+    mPredictedActivityList(mPredictActivityBuf)
 {
     for (auto & v : mAmbientContextTypeSupportedBuf)
         v = SemanticTagType{};
-    mAmbientContextTypeSupportedList = Span<SemanticTagType>(mAmbientContextTypeSupportedBuf, 0);
     for (auto & v : mPredictActivityBuf)
         v = PredictActivity{};
     mPredictedActivityList = Span<PredictActivity>(mPredictActivityBuf, 0);
@@ -36,13 +35,10 @@ AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl() :
         v = false;
 }
 
-CHIP_ERROR AmbientContextSensingDelegateImpl::SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
+SemanticTagType * AmbientContextSensingDelegateImpl::GetAmbientContextTypeSupportedBuf(size_t size)
 {
-    VerifyOrReturnError(ACTypeList.size() <= kMaxACTypeSupported, CHIP_ERROR_INVALID_ARGUMENT);
-    VerifyOrReturnError(ACTypeList.size() > 0, CHIP_ERROR_INVALID_ARGUMENT);
-    std::copy(ACTypeList.begin(), ACTypeList.end(), mAmbientContextTypeSupportedBuf);
-    mAmbientContextTypeSupportedList = Span<SemanticTagType>(mAmbientContextTypeSupportedBuf, ACTypeList.size());
-    return CHIP_NO_ERROR;
+    VerifyOrReturnError(size <= kMaxACTypeSupported, nullptr);
+    return mAmbientContextTypeSupportedBuf;
 }
 
 CHIP_ERROR AmbientContextSensingDelegateImpl::SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList)

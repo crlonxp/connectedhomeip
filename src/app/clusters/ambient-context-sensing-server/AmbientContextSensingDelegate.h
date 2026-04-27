@@ -75,13 +75,9 @@ class AmbientContextSensingDelegate
 {
 public:
     virtual ~AmbientContextSensingDelegate() = default;
-    // Save the AmbientContextTypeSupported attribute passed from the caller
-    virtual CHIP_ERROR SetAmbientContextTypeSupported(const Span<SemanticTagType> & ACTypeList)
-    {
-        return CHIP_ERROR_INCORRECT_STATE;
-    }
-    // Return the stored AmbientContextTypeSupported
-    virtual Span<SemanticTagType> & GetAmbientContextTypeSupported() { return mEmptyACTypeSupported; }
+
+    // Bufer to keep the AmbientContextTypeSupported attribute passed from the caller
+    virtual SemanticTagType * GetAmbientContextTypeSupportedBuf(size_t size) { return nullptr; }
 
     // Save the PredictedActivity attribute passed from the caller
     virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList)
