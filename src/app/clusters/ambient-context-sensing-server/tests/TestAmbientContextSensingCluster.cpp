@@ -142,8 +142,7 @@ private:
     bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit];
 };
 
-TestACSDelegate::TestACSDelegate() :
-    mPredictedActivityList(mPredictActivityBuf)
+TestACSDelegate::TestACSDelegate() : mPredictedActivityList(mPredictActivityBuf)
 {
     for (auto & v : mAmbientContextTypeSupportedBuf)
         v = SemanticTagType{};

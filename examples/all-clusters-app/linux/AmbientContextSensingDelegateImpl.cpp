@@ -23,8 +23,7 @@ using namespace chip;
 using namespace chip::app;
 using namespace chip::app::Clusters;
 
-AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl() :
-    mPredictedActivityList(mPredictActivityBuf)
+AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl() : mPredictedActivityList(mPredictActivityBuf)
 {
     for (auto & v : mAmbientContextTypeSupportedBuf)
         v = SemanticTagType{};

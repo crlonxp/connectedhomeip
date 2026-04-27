@@ -290,7 +290,7 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::SetObjectCountConfig
     {
         VerifyOrReturnError(newObjectCountConfig.countingObject.namespaceID == kNamespaceIdentifiedObject,
                             Protocols::InteractionModel::Status::ConstraintError);
-        bool inList           = false;
+        bool inList             = false;
         auto & ACSSupportedList = mAmbientContextTypeSupportedList;
         for (const auto & item : ACSSupportedList)
         {
@@ -735,7 +735,7 @@ CHIP_ERROR AmbientContextSensingCluster::CheckInputSupportedType(const Span<Sema
 
 bool AmbientContextSensingCluster::IsSupportedEvent(const AmbientContextSensingType & sensedEvent)
 {
-    const auto & tags        = sensedEvent.ambientContextSensed;
+    const auto & tags          = sensedEvent.ambientContextSensed;
     const auto & supportedList = mAmbientContextTypeSupportedList;
 
     return std::all_of(tags.begin(), tags.end(), [&supportedList](const auto & tag) {
