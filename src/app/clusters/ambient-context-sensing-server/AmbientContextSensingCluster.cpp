@@ -258,7 +258,7 @@ CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensin
         }
         else
         {
-            newHoldTime = holdTimeMaxSec - elapsedSec;
+            newHoldTime = (elapsedSec < holdTimeMaxSec) ? (holdTimeMaxSec - elapsedSec) : System::Clock::Seconds16(0);
         }
     }
     item->mEndTimestamp = item->mStartTimestamp + newHoldTime;
