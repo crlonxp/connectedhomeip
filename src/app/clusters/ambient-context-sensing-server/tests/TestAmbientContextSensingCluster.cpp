@@ -155,7 +155,7 @@ TestACSDelegate::TestACSDelegate() : mPredictedActivityList(mPredictActivityBuf)
 
 SemanticTagType * TestACSDelegate::GetAmbientContextTypeSupportedBuf(size_t size)
 {
-    VerifyOrReturnError(size <= kMaxACTypeSupported, nullptr);
+    VerifyOrReturnError(size <= kMaxACTypeSupported_test, nullptr);
     return mAmbientContextTypeSupportedBuf;
 }
 
