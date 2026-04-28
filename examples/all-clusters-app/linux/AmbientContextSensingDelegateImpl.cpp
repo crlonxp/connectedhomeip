@@ -51,10 +51,15 @@ CHIP_ERROR AmbientContextSensingDelegateImpl::SetPredictedActivity(const Span<Pr
         auto & dst       = mPredictActivityBuf[i];
         dst.mInfo        = src;
 
+        if (!src.ambientContextType.HasValue())
+        {
+            dst.mInfo.ambientContextType.ClearValue();
+            continue;
+        }
+
         // Copy tags
         const auto & acTypeList = src.ambientContextType.Value();
         const auto tagCount     = acTypeList.size();
-        VerifyOrReturnError(tagCount > 0, CHIP_ERROR_INVALID_ARGUMENT);
         VerifyOrReturnError(tagCount <= kMaxPredictedACType, CHIP_ERROR_INVALID_ARGUMENT);
         for (size_t t = 0; t < tagCount; t++)
         {
