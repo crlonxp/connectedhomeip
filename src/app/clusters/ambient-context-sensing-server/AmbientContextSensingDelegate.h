@@ -76,7 +76,7 @@ class AmbientContextSensingDelegate
 public:
     virtual ~AmbientContextSensingDelegate() = default;
 
-    // Bufer to keep the AmbientContextTypeSupported attribute passed from the caller
+    // Buffer to keep the AmbientContextTypeSupported attribute passed from the caller
     virtual SemanticTagType * GetAmbientContextTypeSupportedBuf(size_t size) { return nullptr; }
 
     // Save the PredictedActivity attribute passed from the caller
