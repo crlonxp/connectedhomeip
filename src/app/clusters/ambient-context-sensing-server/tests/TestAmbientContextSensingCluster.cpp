@@ -161,7 +161,8 @@ SemanticTagType * TestACSDelegate::GetAmbientContextTypeSupportedBuf(size_t size
 
 CHIP_ERROR TestACSDelegate::SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList)
 {
-    VerifyOrReturnError(predictedActivityList.size() <= kMaxPredictedActivity, CHIP_ERROR_INVALID_ARGUMENT);
+    constexpr size_t kPredictActivityBufSize = sizeof(mPredictActivityBuf) / sizeof(mPredictActivityBuf[0]);
+    VerifyOrReturnError(predictedActivityList.size() <= kPredictActivityBufSize, CHIP_ERROR_INVALID_ARGUMENT);
 
     // Copy the input predicted activity to local array
     for (size_t i = 0; i < predictedActivityList.size(); i++)
