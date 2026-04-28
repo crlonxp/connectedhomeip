@@ -87,7 +87,7 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::ReadAttribute(const 
     case AmbientContextType::Id:
         return ReadAmbientContextType(encoder);
     case AmbientContextTypeSupported::Id:
-        return ReadAmbientContextTypeSupported(mFeatureMap, encoder);
+        return ReadAmbientContextTypeSupported(encoder);
     case ObjectCountReached::Id:
         return encoder.Encode(GetObjectCountReached());
     case ObjectCountConfig::Id:
@@ -468,8 +468,7 @@ bool AmbientContextSensingCluster::CompareAmbientContextSensed(const AmbientCont
     return true;
 }
 
-CHIP_ERROR AmbientContextSensingCluster::ReadAmbientContextTypeSupported(BitFlags<AmbientContextSensing::Feature> features,
-                                                                         AttributeValueEncoder & encoder)
+CHIP_ERROR AmbientContextSensingCluster::ReadAmbientContextTypeSupported(AttributeValueEncoder & encoder)
 {
     auto & ACSSupportedList = mAmbientContextTypeSupportedList;
     VerifyOrReturnValue(!ACSSupportedList.empty(), encoder.EncodeEmptyList());

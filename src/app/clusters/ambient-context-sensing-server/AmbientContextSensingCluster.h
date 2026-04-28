@@ -115,7 +115,7 @@ public:
 private:
     bool CompareAmbientContextSensed(const AmbientContextSensing::AmbientContextSensingType & sensedEvent,
                                      const AmbientContextSensing::AmbientContextSensingType & newEvent);
-    CHIP_ERROR ReadAmbientContextTypeSupported(BitFlags<AmbientContextSensing::Feature> features, AttributeValueEncoder & encoder);
+    CHIP_ERROR ReadAmbientContextTypeSupported(AttributeValueEncoder & encoder);
     CHIP_ERROR ReadAmbientContextType(AttributeValueEncoder & encoder);
     void SendDetectStartEvent(const AmbientContextSensing::AmbientContextSensed & ACSItem);
     void SendDetectStartEvent(const bool objectCountReached, const uint16_t objectCount);
