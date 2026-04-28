@@ -805,29 +805,29 @@ CHIP_ERROR AmbientContextSensingCluster::CheckPredictedActivity(const Span<Predi
     for (auto item : predictedActivityList)
     {
         // Make sure the start-time > the end-time of the previous PredictedActivityStruct
-        VerifyOrReturnError(item.startTimestamp < item.endTimestamp, CHIP_ERROR_INCORRECT_STATE);
-        VerifyOrReturnError(lastCheckTime < item.startTimestamp, CHIP_ERROR_INCORRECT_STATE);
+        VerifyOrReturnError(item.startTimestamp < item.endTimestamp, CHIP_ERROR_INVALID_ARGUMENT);
+        VerifyOrReturnError(lastCheckTime < item.startTimestamp, CHIP_ERROR_INVALID_ARGUMENT);
         lastCheckTime = item.endTimestamp;
         // Check ambientContextType
         if (item.ambientContextType.HasValue())
         {
-            auto acsTypeList = item.ambientContextType.Value();
-            VerifyOrReturnError(acsTypeList.size() <= kMaxPredictedACType, CHIP_ERROR_INCORRECT_STATE);
+            auto & acsTypeList = item.ambientContextType.Value();
+            VerifyOrReturnError(acsTypeList.size() <= kMaxPredictedACType, CHIP_ERROR_INVALID_ARGUMENT);
             for (const auto & acsType : acsTypeList)
             {
                 switch (acsType.namespaceID)
                 {
                 case kNamespaceIdentifiedObject:
-                    VerifyOrReturnError(mFeatureMap.Has(Feature::kObjectIdentification), CHIP_ERROR_INCORRECT_STATE);
+                    VerifyOrReturnError(mFeatureMap.Has(Feature::kObjectIdentification), CHIP_ERROR_INVALID_ARGUMENT);
                     break;
                 case kNamespaceIdentifiedSound:
-                    VerifyOrReturnError(mFeatureMap.Has(Feature::kSoundIdentification), CHIP_ERROR_INCORRECT_STATE);
+                    VerifyOrReturnError(mFeatureMap.Has(Feature::kSoundIdentification), CHIP_ERROR_INVALID_ARGUMENT);
                     break;
                 case kNamespaceIdentifiedHumanActivity:
-                    VerifyOrReturnError(mFeatureMap.Has(Feature::kHumanActivity), CHIP_ERROR_INCORRECT_STATE);
+                    VerifyOrReturnError(mFeatureMap.Has(Feature::kHumanActivity), CHIP_ERROR_INVALID_ARGUMENT);
                     break;
                 default:
-                    return CHIP_ERROR_INCORRECT_STATE;
+                    return CHIP_ERROR_INVALID_ARGUMENT;
                 }
             }
         }
@@ -838,7 +838,7 @@ CHIP_ERROR AmbientContextSensingCluster::CheckPredictedActivity(const Span<Predi
             if (item.crowdCount.HasValue())
             {
                 uint8_t value = item.crowdCount.Value();
-                VerifyOrReturnError(((1 <= value) && (value <= 254)), CHIP_ERROR_INCORRECT_STATE);
+                VerifyOrReturnError(((1 <= value) && (value <= 254)), CHIP_ERROR_INVALID_ARGUMENT);
             }
         }
     }
