@@ -294,7 +294,8 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::SetObjectCountConfig
         auto & ACSSupportedList = mAmbientContextTypeSupportedList;
         for (const auto & item : ACSSupportedList)
         {
-            if (item.tag == newObjectCountConfig.countingObject.tag)
+            if ((item.tag == newObjectCountConfig.countingObject.tag) &&
+                (item.namespaceID == newObjectCountConfig.countingObject.namespaceID))
             {
                 inList = true;
                 break;
