@@ -29,7 +29,8 @@ using namespace AmbientContextSensing::Attributes;
 
 AmbientContextSensingCluster::AmbientContextSensingCluster(const Config & config) :
     DefaultServerCluster({ config.mEndpointId, AmbientContextSensing::Id }), mFeatureMap(config.mFeatureMap),
-    mOptionalAttributeSet(config.mOptionalAttributeBits), mACSDelegate(config.mDelegate), mHoldTimeDelegate(config.mHoldTimeDelegate)
+    mOptionalAttributeSet(config.mOptionalAttributeBits), mACSDelegate(config.mDelegate),
+    mHoldTimeDelegate(config.mHoldTimeDelegate)
 {
     assert(mFeatureMap.Has(Feature::kHumanActivity) || mFeatureMap.Has(Feature::kObjectIdentification) ||
            mFeatureMap.Has(Feature::kSoundIdentification) || mFeatureMap.Has(Feature::kObjectCounting));
@@ -182,7 +183,7 @@ CHIP_ERROR AmbientContextSensingCluster::SetAmbientContextTypeSupported(const Sp
 CHIP_ERROR AmbientContextSensingCluster::AddDetection(const AmbientContextSensingType & sensedEvent)
 {
     size_t acsSize = sensedEvent.ambientContextSensed.size();
-    VerifyOrReturnError((0 < acsSize) && (acsSize <= kMaxACSensed) , CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrReturnError((0 < acsSize) && (acsSize <= kMaxACSensed), CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrReturnError(IsSupportedEvent(sensedEvent), CHIP_ERROR_INCORRECT_STATE);
 
     // If there have already been mSimultaneousDetectionLimit items in mAmbientContextTypeList => remove the oldest ones
@@ -380,7 +381,8 @@ DataModel::ActionReturnStatus AmbientContextSensingCluster::SetSimultaneousDetec
 
 CHIP_ERROR AmbientContextSensingCluster::SetHoldTime(uint16_t holdTime)
 {
-    VerifyOrReturnError((mHoldTimeLimits.holdTimeMin <= holdTime) && (holdTime <= mHoldTimeLimits.holdTimeMax), CHIP_ERROR_INVALID_ARGUMENT);
+    VerifyOrReturnError((mHoldTimeLimits.holdTimeMin <= holdTime) && (holdTime <= mHoldTimeLimits.holdTimeMax),
+                        CHIP_ERROR_INVALID_ARGUMENT);
     VerifyOrReturnError(holdTime != mHoldTime, CHIP_NO_ERROR);
 
     mHoldTime = holdTime;

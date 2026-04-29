@@ -33,7 +33,10 @@ class AmbientContextSensingCluster : public DefaultServerCluster, public TimerCo
 public:
     struct Config
     {
-        Config(EndpointId endpointId, AmbientContextSensing::AmbientContextSensingDelegate & acsDelegate, TimerDelegate & timerDelegate) : mEndpointId(endpointId), mDelegate(acsDelegate), mHoldTimeDelegate(timerDelegate)
+        Config(EndpointId endpointId, AmbientContextSensing::AmbientContextSensingDelegate & acsDelegate,
+               TimerDelegate & timerDelegate) :
+            mEndpointId(endpointId),
+            mDelegate(acsDelegate), mHoldTimeDelegate(timerDelegate)
         {}
 
         Config & WithFeatures(AmbientContextSensing::Feature featureMap)

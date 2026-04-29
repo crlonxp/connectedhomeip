@@ -16,10 +16,10 @@
  */
 
 #include "AmbientContextSensingDelegateImpl.h"
+#include <app/static-cluster-config/AmbientContextSensing.h>
+#include <cassert>
 #include <lib/support/logging/CHIPLogging.h>
 #include <system/SystemClock.h>
-#include <cassert>
-#include <app/static-cluster-config/AmbientContextSensing.h>
 
 using namespace chip;
 using namespace chip::app;
