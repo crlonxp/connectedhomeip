@@ -76,30 +76,26 @@ class AmbientContextSensingDelegate
 public:
     virtual ~AmbientContextSensingDelegate() = default;
 
+    static AmbientContextSensingDelegate & GetInstance();
+
     // Buffer to keep the AmbientContextTypeSupported attribute passed from the caller
-    virtual SemanticTagType * GetAmbientContextTypeSupportedBuf(size_t size) { return nullptr; }
+    virtual SemanticTagType * GetAmbientContextTypeSupportedBuf(size_t size) = 0;
 
     // Save the PredictedActivity attribute passed from the caller
-    virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList)
-    {
-        return CHIP_ERROR_INCORRECT_STATE;
-    }
+    virtual CHIP_ERROR SetPredictedActivity(const Span<PredictedActivityType> & predictedActivityList) = 0;
+
     // Return the stored PredictedActivity
-    virtual Span<PredictActivity> & GetPredictedActivity() { return mEmptyPredictActivity; }
+    virtual Span<PredictActivity> & GetPredictedActivity() = 0;
 
     // Retrieve the id of an available AmbientContextType from delegate and mark it as allocated
-    virtual DetectFuncResult FindAndUseAvailableDetection() { return { .res = CHIP_ERROR_INCORRECT_STATE }; }
+    virtual DetectFuncResult FindAndUseAvailableDetection() = 0;
     // Get the pointer of the space from the returned id in FindAndUseAvailableDetection()
-    virtual AmbientContextSensed * GetAllocedDetection(const uint8_t id) { return nullptr; }
+    virtual AmbientContextSensed * GetAllocedDetection(const uint8_t id) = 0;
     // Return the space by passing the id
-    virtual CHIP_ERROR DelDetection(const uint8_t & id) { return CHIP_ERROR_INCORRECT_STATE; }
+    virtual CHIP_ERROR DelDetection(const uint8_t & id) = 0;
 
     // Return the current epoch
-    virtual uint64_t GetEpochNow() { return 0; }
-
-private:
-    Span<SemanticTagType> mEmptyACTypeSupported{};
-    Span<PredictActivity> mEmptyPredictActivity{};
+    virtual uint64_t GetEpochNow() = 0;
 };
 
 } // namespace chip::app::Clusters::AmbientContextSensing

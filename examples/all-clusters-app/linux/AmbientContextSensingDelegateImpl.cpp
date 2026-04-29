@@ -18,10 +18,21 @@
 #include "AmbientContextSensingDelegateImpl.h"
 #include <lib/support/logging/CHIPLogging.h>
 #include <system/SystemClock.h>
+#include <cassert>
+#include <app/static-cluster-config/AmbientContextSensing.h>
 
 using namespace chip;
 using namespace chip::app;
 using namespace chip::app::Clusters;
+
+AmbientContextSensingDelegate & AmbientContextSensingDelegate::GetInstance()
+{
+    static AmbientContextSensingDelegateImpl Instance[AmbientContextSensing::StaticApplicationConfig::kFixedClusterConfig.size()];
+    static uint8_t UsedInstanceCount = 0;
+
+    assert(UsedInstanceCount < AmbientContextSensing::StaticApplicationConfig::kFixedClusterConfig.size());
+    return Instance[UsedInstanceCount++];
+}
 
 AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl() : mPredictedActivityList(mPredictActivityBuf)
 {

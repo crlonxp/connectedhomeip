@@ -33,7 +33,8 @@ class AmbientContextSensingCluster : public DefaultServerCluster, public TimerCo
 public:
     struct Config
     {
-        Config(EndpointId endpointId, TimerDelegate & timerDelegate) : mEndpointId(endpointId), mHoldTimeDelegate(timerDelegate) {}
+        Config(EndpointId endpointId, AmbientContextSensing::AmbientContextSensingDelegate & acsDelegate, TimerDelegate & timerDelegate) : mEndpointId(endpointId), mDelegate(acsDelegate), mHoldTimeDelegate(timerDelegate)
+        {}
 
         Config & WithFeatures(AmbientContextSensing::Feature featureMap)
         {
@@ -71,6 +72,7 @@ public:
             .holdTimeMax     = AmbientContextSensing::kDefaultHoldTimeMax,
             .holdTimeDefault = AmbientContextSensing::kDefaultHoldTimeDefault
         };
+        AmbientContextSensing::AmbientContextSensingDelegate & mDelegate;
         TimerDelegate & mHoldTimeDelegate;
     };
 
@@ -109,8 +111,6 @@ public:
     AmbientContextSensing::Structs::HoldTimeLimitsStruct::Type GetHoldTimeLimits() { return mHoldTimeLimits; }
     CHIP_ERROR SetPredictedActivity(const Span<AmbientContextSensing::PredictedActivityType> & predictedActivity);
     void TimerFired() override;
-    void SetDelegate(AmbientContextSensing::AmbientContextSensingDelegate & delegate) { mACSDelegate = &delegate; }
-    void ResetDelegate() { mACSDelegate = &mDefaultACSDelegate; }
 
 private:
     bool CompareAmbientContextSensed(const AmbientContextSensing::AmbientContextSensingType & sensedEvent,
@@ -136,8 +136,7 @@ private:
     bool mHumanActivityDetected = false;
     bool mObjectIdentified      = false;
     bool mAudioContextDetected  = false;
-    AmbientContextSensing::AmbientContextSensingDelegate mDefaultACSDelegate;
-    AmbientContextSensing::AmbientContextSensingDelegate * mACSDelegate = &mDefaultACSDelegate;
+    AmbientContextSensing::AmbientContextSensingDelegate & mACSDelegate;
 
     Span<AmbientContextSensing::SemanticTagType> mAmbientContextTypeSupportedList;
 
