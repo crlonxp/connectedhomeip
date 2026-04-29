@@ -34,7 +34,7 @@ AmbientContextSensingDelegate & AmbientContextSensingDelegate::GetInstance()
     return Instance[UsedInstanceCount++];
 }
 
-AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl() 
+AmbientContextSensingDelegateImpl::AmbientContextSensingDelegateImpl()
 {
     for (auto & v : mAmbientContextTypeSupportedBuf)
     {
