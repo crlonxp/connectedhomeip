@@ -17,11 +17,11 @@
  */
 
 #include "AllClustersCommandDelegate.h"
-#include "ambient-context-sensing-delegate-impl.h"
 #include "AppOptions.h"
 #include "ValveControlDelegate.h"
 #include "WindowCoveringManager.h"
 #include "air-quality-instance.h"
+#include "ambient-context-sensing-delegate-impl.h"
 #include "app-common/zap-generated/ids/Clusters.h"
 #include "dishwasher-mode.h"
 #include "include/diagnostic-logs-provider-delegate-impl.h"
