@@ -17,7 +17,7 @@
  */
 
 #include "AllClustersCommandDelegate.h"
-#include "AmbientContextSensingDelegateImpl.h"
+#include "ambient-context-sensing-delegate-impl.h"
 #include "AppOptions.h"
 #include "ValveControlDelegate.h"
 #include "WindowCoveringManager.h"

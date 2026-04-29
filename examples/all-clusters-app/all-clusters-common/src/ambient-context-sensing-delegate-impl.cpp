@@ -15,7 +15,7 @@
  *    limitations under the License.
  */
 
-#include "AmbientContextSensingDelegateImpl.h"
+#include "ambient-context-sensing-delegate-impl.h"
 #include <app/static-cluster-config/AmbientContextSensing.h>
 #include <cassert>
 #include <lib/support/logging/CHIPLogging.h>
