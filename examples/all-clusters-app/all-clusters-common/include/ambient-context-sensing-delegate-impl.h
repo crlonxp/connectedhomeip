@@ -25,6 +25,10 @@ namespace Clusters {
 
 using namespace chip::app::Clusters::AmbientContextSensing;
 
+// Use the smaller value for not consuming too much resources
+#define kMaxACTypeSupported_s          10
+#define kMaxPredictedActivity_s        3
+
 class AmbientContextSensingDelegateImpl : public AmbientContextSensingDelegate
 {
 public:
@@ -48,14 +52,15 @@ public:
     AmbientContextSensingDelegateImpl & operator=(AmbientContextSensingDelegateImpl &&)      = delete;
 
 private:
-    SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported];
+    SemanticTagType mAmbientContextTypeSupportedBuf[kMaxACTypeSupported_s];
 
-    PredictActivity mPredictActivityBuf[kMaxPredictedActivity];
+    PredictActivity mPredictActivityBuf[kMaxPredictedActivity_s];
     Span<PredictActivity> mPredictedActivityList;
 
     // From spec, constraint of AmbientContextType is 1 to SimultaneousDetectionLimit.
     AmbientContextSensed mAmbientContextTypeList[kMaxSimultaneousDetectionLimit];
     bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit];
+
 };
 
 } // namespace Clusters

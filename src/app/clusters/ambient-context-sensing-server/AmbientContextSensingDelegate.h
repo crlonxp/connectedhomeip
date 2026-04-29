@@ -54,7 +54,7 @@ struct AmbientContextSensed : public IntrusiveListNodeBase<>
 struct PredictActivity
 {
     PredictedActivityType mInfo;
-    SemanticTagType mOwnedTags[kMaxPredictedACType];
+    std::unique_ptr<SemanticTagType[]> mOwnedTags;
 };
 
 struct DetectFuncResult

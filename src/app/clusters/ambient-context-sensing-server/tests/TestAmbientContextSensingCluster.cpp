@@ -142,7 +142,7 @@ private:
     bool mAmbientContextTypeListUsed[kMaxSimultaneousDetectionLimit];
 };
 
-TestACSDelegate::TestACSDelegate() : mPredictedActivityList(mPredictActivityBuf)
+TestACSDelegate::TestACSDelegate()
 {
     for (auto & v : mAmbientContextTypeSupportedBuf)
         v = SemanticTagType{};
@@ -180,6 +180,7 @@ CHIP_ERROR TestACSDelegate::SetPredictedActivity(const Span<PredictedActivityTyp
         const auto & acTypeList = src.ambientContextType.Value();
         const auto tagCount     = acTypeList.size();
         VerifyOrReturnError(tagCount <= kMaxPredictedACType, CHIP_ERROR_INVALID_ARGUMENT);
+        dst.mOwnedTags = std::make_unique<SemanticTagType[]>(tagCount);
 
         for (size_t t = 0; t < tagCount; t++)
         {
@@ -187,7 +188,7 @@ CHIP_ERROR TestACSDelegate::SetPredictedActivity(const Span<PredictedActivityTyp
         }
 
         dst.mInfo.ambientContextType.SetValue(
-            DataModel::List<const SemanticTagType>(dst.mOwnedTags, static_cast<uint16_t>(tagCount)));
+            DataModel::List<const SemanticTagType>(dst.mOwnedTags.get(), static_cast<uint16_t>(tagCount)));
     }
     mPredictedActivityList = Span<PredictActivity>(mPredictActivityBuf, predictedActivityList.size());
 
