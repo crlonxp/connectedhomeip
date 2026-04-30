@@ -26,8 +26,8 @@ namespace Clusters {
 using namespace chip::app::Clusters::AmbientContextSensing;
 
 // Use the smaller value for not consuming too much resources
-#define kMaxACTypeSupported_s 10
-#define kMaxPredictedActivity_s 3
+constexpr uint8_t kMaxACTypeSupported_s   = 20;
+constexpr uint8_t kMaxPredictedActivity_s = 3;
 
 class AmbientContextSensingDelegateImpl : public AmbientContextSensingDelegate
 {
